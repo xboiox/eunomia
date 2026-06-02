@@ -1,0 +1,231 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ─── Boilerplate auth models (NextAuth) ───────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── User (extended from boilerplate) ─────────────────────────────────────────
+
+model User {
+  id                    String            @id @default(cuid())
+  name                  String?
+  email                 String?           @unique
+  emailVerified         DateTime?
+  image                 String?
+  password              String?
+  passwordResetToken    String?           @unique
+  passwordResetTokenExp DateTime?
+  isSuperAdmin          Boolean           @default(false)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  accounts              Account[]
+  sessions              Session[]
+  tenantUsers           TenantUser[]
+  controlResponses      ControlResponse[]
+  evidences             Evidence[]
+}
+
+// ─── License ──────────────────────────────────────────────────────────────────
+
+model License {
+  id              String    @id @default(cuid())
+  licenseKey      String    @unique
+  licenseType     String    @default("standard")
+  maxTenants      Int
+  activatedAt     DateTime  @default(now())
+  expiresAt       DateTime?
+  lastValidatedAt DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+}
+
+// ─── Tenant ───────────────────────────────────────────────────────────────────
+
+model Tenant {
+  id          String       @id @default(cuid())
+  name        String
+  slug        String       @unique
+  description String?
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  tenantUsers TenantUser[]
+  assessments Assessment[]
+}
+
+model TenantUser {
+  id        String     @id @default(cuid())
+  userId    String
+  tenantId  String
+  role      TenantRole @default(ASSESSOR)
+  createdAt DateTime   @default(now())
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tenantId])
+}
+
+enum TenantRole {
+  ADMIN
+  ASSESSOR
+}
+
+// ─── Framework ────────────────────────────────────────────────────────────────
+
+model Framework {
+  id          String          @id @default(cuid())
+  code        FrameworkCode   @unique
+  name        String
+  version     String
+  description String?         @db.Text
+  domains     ControlDomain[]
+  assessments Assessment[]
+}
+
+enum FrameworkCode {
+  NIST_CSF
+  ISO_27001
+  ISO_27002
+  PCI_DSS
+}
+
+// Top-level grouping: Function (NIST CSF), Theme (ISO), Requirement (PCI DSS)
+model ControlDomain {
+  id          String    @id @default(cuid())
+  frameworkId String
+  code        String
+  name        String
+  description String?   @db.Text
+  order       Int
+  framework   Framework @relation(fields: [frameworkId], references: [id])
+  controls    Control[]
+
+  @@unique([frameworkId, code])
+}
+
+// Assessable control: Subcategory (NIST CSF), Control (ISO), Sub-requirement (PCI DSS)
+model Control {
+  id          String            @id @default(cuid())
+  domainId    String
+  code        String
+  sectionCode String?
+  sectionName String?
+  name        String
+  description String?           @db.Text
+  guidance    String?           @db.Text
+  order       Int
+  domain      ControlDomain     @relation(fields: [domainId], references: [id])
+  responses   ControlResponse[]
+
+  @@unique([domainId, code])
+}
+
+// ─── Assessment ───────────────────────────────────────────────────────────────
+
+model Assessment {
+  id              String           @id @default(cuid())
+  tenantId        String
+  frameworkId     String
+  name            String
+  description     String?
+  status          AssessmentStatus @default(DRAFT)
+  overallDeadline DateTime?
+  createdById     String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  tenant          Tenant           @relation(fields: [tenantId], references: [id])
+  framework       Framework        @relation(fields: [frameworkId], references: [id])
+  responses       ControlResponse[]
+
+  @@index([tenantId])
+}
+
+enum AssessmentStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+}
+
+// ─── Control Response ─────────────────────────────────────────────────────────
+
+// One record per control per assessment — shared by all assessors (collaborative)
+model ControlResponse {
+  id              String           @id @default(cuid())
+  assessmentId    String
+  controlId       String
+  lastUpdatedById String
+  status          ComplianceStatus @default(NOT_STARTED)
+  maturityLevel   Int?
+  notes           String?          @db.Text
+  deadline        DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  assessment      Assessment       @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  control         Control          @relation(fields: [controlId], references: [id])
+  lastUpdatedBy   User             @relation(fields: [lastUpdatedById], references: [id])
+  evidences       Evidence[]
+
+  @@unique([assessmentId, controlId])
+  @@index([assessmentId])
+}
+
+enum ComplianceStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  IMPLEMENTED
+  NOT_APPLICABLE
+}
+
+// ─── Evidence ─────────────────────────────────────────────────────────────────
+
+model Evidence {
+  id                String          @id @default(cuid())
+  controlResponseId String
+  fileName          String
+  filePath          String
+  fileSize          Int
+  mimeType          String
+  uploadedById      String
+  uploadedAt        DateTime        @default(now())
+  controlResponse   ControlResponse @relation(fields: [controlResponseId], references: [id], onDelete: Cascade)
+  uploadedBy        User            @relation(fields: [uploadedById], references: [id])
+
+  @@index([controlResponseId])
+}
