@@ -229,7 +229,7 @@ App authenticates via `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (server-side 
 
 > Full step-by-step local install + troubleshooting lives in [README.md](README.md). Summary:
 
-1. Create the PostgreSQL role + database (default dev role: `spadmgrc`, db `eunomia`)
+1. Create the PostgreSQL role + database (default dev role: `<db-user>`, db `eunomia`)
 2. Set env vars (`cp .env.example .env`, then fill `DATABASE_URL`, `NEXTAUTH_SECRET`, `SUPABASE_*`)
 3. `npm run db:generate` → `npm run db:migrate` → `npm run db:seed`
 4. `npm run dev` → app redirects to **`/activate`** (license gate URL = `/activate`, the `(setup)` route group page)

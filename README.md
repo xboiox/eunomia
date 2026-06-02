@@ -49,17 +49,17 @@ Connect to PostgreSQL as a superuser, then create the application role and datab
 
 ```sql
 -- Application role (change the password for your environment)
-CREATE ROLE spadmgrc WITH LOGIN PASSWORD '<your-db-password>' CREATEDB;
+CREATE ROLE <db-user> WITH LOGIN PASSWORD '<your-db-password>' CREATEDB;
 
 -- Application database, owned by that role
-CREATE DATABASE eunomia OWNER spadmgrc;
+CREATE DATABASE eunomia OWNER <db-user>;
 
 -- Privileges on the public schema
 \c eunomia
-GRANT ALL ON SCHEMA public TO spadmgrc;
+GRANT ALL ON SCHEMA public TO <db-user>;
 ```
 
-> ⚠️ **Security:** choose a strong password for the `spadmgrc` role and keep it **only** in your local `.env` (already git-ignored). Never commit real credentials.
+> ⚠️ **Security:** choose a strong password for the `<db-user>` role and keep it **only** in your local `.env` (already git-ignored). Never commit real credentials.
 
 ### 3. Configure environment variables
 
@@ -73,7 +73,7 @@ Edit `.env`:
 
 ```ini
 # Percent-encode any special characters in the password (e.g. ! -> %21, $ -> %24)
-DATABASE_URL="postgresql://spadmgrc:<password>@localhost:5432/eunomia"
+DATABASE_URL="postgresql://<db-user>:<password>@localhost:5432/eunomia"
 
 # Any random string ≥ 32 chars. Generate with:  openssl rand -base64 48
 NEXTAUTH_SECRET="<your-generated-secret>"
@@ -217,7 +217,7 @@ curl "$SUPABASE_URL/rest/v1/license_keys?select=key,is_active" \
 - Verify PostgreSQL is running: `lsof -iTCP:5432 -sTCP:LISTEN`
 - Verify the role and password by connecting with the exact URI:
   ```bash
-  psql 'postgresql://spadmgrc:<password>@localhost:5432/eunomia' -c '\conninfo'
+  psql 'postgresql://<db-user>:<password>@localhost:5432/eunomia' -c '\conninfo'
   ```
 - Remember to **percent-encode** special characters in the password inside `DATABASE_URL`.
 
