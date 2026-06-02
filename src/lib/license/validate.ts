@@ -44,7 +44,17 @@ export async function validateLicenseKey(
       },
     });
 
-    rows = await res.json();
+    // Supabase error responses return an object (not an array) with a non-2xx
+    // status. Treat anything that isn't a successful array payload as unreachable.
+    if (!res.ok) {
+      return { valid: false, reason: "server_unreachable" };
+    }
+
+    const payload = await res.json();
+    if (!Array.isArray(payload)) {
+      return { valid: false, reason: "server_unreachable" };
+    }
+    rows = payload;
   } catch {
     return { valid: false, reason: "server_unreachable" };
   }

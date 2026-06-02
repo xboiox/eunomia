@@ -180,11 +180,6 @@ EMAIL_FROM=
 | `.env.example` | All required env vars with descriptions |
 | `uploads/` | Evidence file storage root (gitignored) |
 
-### Deprecated / Kept for Reference
-| File | Status |
-|---|---|
-| `src/utils/prismaDB.ts` | **Not used** — all code migrated to `src/lib/prisma/client.ts`. Can be deleted. |
-
 ---
 
 ## Testing

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getAuthSession } from "@/lib/auth/session";
 import { getUserTenants } from "@/lib/auth/rbac";
 
@@ -29,7 +30,7 @@ export default async function DashboardPage() {
             No organizations yet.
           </p>
           <p className="mt-1 text-sm text-blue-700 dark:text-blue-400">
-            <a href="/dashboard/tenants/new" className="underline">Create your first organization</a> to get started.
+            <Link href="/dashboard/tenants/new" className="underline">Create your first organization</Link> to get started.
           </p>
         </div>
       )}

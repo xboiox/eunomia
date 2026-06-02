@@ -91,6 +91,16 @@ describe("validateLicenseKey", () => {
     expect(result.reason).toBe("server_unreachable");
   });
 
+  it("returns valid:false with reason server_unreachable on a non-ok HTTP response", async () => {
+    // Supabase error responses return an object, not an array.
+    mockSupabaseResponse({ message: "permission denied" } as never, false);
+    const { validateLicenseKey } = await import("../validate");
+    const result = await validateLicenseKey("ANY-KEY");
+
+    expect(result.valid).toBe(false);
+    expect(result.reason).toBe("server_unreachable");
+  });
+
   it("returns valid:false with reason misconfigured when env vars missing", async () => {
     vi.stubEnv("SUPABASE_URL", "");
     vi.resetModules();
