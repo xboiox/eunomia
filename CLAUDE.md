@@ -15,15 +15,15 @@ Built on top of the **Play Next.js** SaaS boilerplate.
 
 ## Current Status
 
-**Phase 3 ✅ Complete — Phase 4 (Assessment management) is next.**
+**Phase 4 ✅ Complete — Phase 5 (Evidence upload) is next.**
 
 ```
 Phase 0 ✅  Setup & cleanup
 Phase 1 ✅  License activation (Supabase daily check + Web UI)
 Phase 2 ✅  Auth + multi-tenancy + RBAC + dashboard shell
 Phase 3 ✅  Framework seed data + browser UI (4 frameworks, 26 domains, 355 controls)
-Phase 4 ←   Assessment management + control responses
-Phase 5     Evidence upload (local filesystem)
+Phase 4 ✅  Assessment management + collaborative control responses
+Phase 5 ←   Evidence upload (local filesystem)
 Phase 6     Dashboard + Recharts
 Phase 7     Polish + E2E tests
 ```
@@ -172,6 +172,18 @@ EMAIL_FROM=
 | `src/app/dashboard/frameworks/page.tsx` | Framework cards |
 | `src/app/dashboard/frameworks/[frameworkId]/page.tsx` | Control browser grouped by domain/section |
 
+### Assessments (Phase 4)
+| File | Purpose |
+|---|---|
+| `src/app/api/assessments/route.ts` | GET list (?tenantId, ASSESSOR) + POST create (ADMIN, auto-stubs all controls) |
+| `src/app/api/assessments/[assessmentId]/route.ts` | GET / PATCH / DELETE (PATCH+DELETE = ADMIN) |
+| `src/app/api/assessments/[assessmentId]/controls/route.ts` | GET all responses (control+domain joined) |
+| `src/app/api/assessments/[assessmentId]/controls/[controlId]/route.ts` | PUT upsert response (ASSESSOR, collaborative) |
+| `src/app/dashboard/assessments/page.tsx` | List with progress bars |
+| `src/app/dashboard/assessments/new/page.tsx` + `components/assessments/NewAssessmentForm.tsx` | Create form |
+| `src/app/dashboard/assessments/[assessmentId]/page.tsx` | Overview + controls grouped by domain |
+| `src/app/dashboard/assessments/[assessmentId]/controls/[controlId]/page.tsx` + `components/assessments/ControlResponseForm.tsx` | Response form (maturity for NIST, status otherwise) |
+
 ### Infrastructure
 | File | Purpose |
 |---|---|
@@ -190,13 +202,15 @@ npm run test:run    # single run
 npm run test:coverage  # with coverage report
 ```
 
-Current: **71 tests, 7 test files, all passing**
+Current: **90 tests, 9 test files, all passing** (CI runs lint + typecheck + test on every push)
 
 Test files:
-- `src/lib/license/__tests__/` — validate, cookie, check (19 tests)
+- `src/lib/license/__tests__/` — validate, cookie, check (20 tests)
 - `src/lib/auth/__tests__/rbac.test.ts` — RBAC helpers (12 tests)
 - `src/app/api/tenants/__tests__/route.test.ts` — tenant API (5 tests)
 - `src/app/api/users/__tests__/route.test.ts` — user API (6 tests)
+- `src/app/api/frameworks/__tests__/route.test.ts` — framework API (5 tests)
+- `src/app/api/assessments/__tests__/route.test.ts` — assessment API + response upsert (13 tests)
 - `prisma/seeds/__tests__/seed-data.test.ts` — framework seed integrity (29 tests)
 
 ---

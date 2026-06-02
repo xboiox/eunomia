@@ -134,26 +134,31 @@ To issue a license: INSERT a row into this table via Supabase Dashboard.
 
 ---
 
-## Phase 4: Assessment Management
+## Phase 4: Assessment Management ✅ COMPLETED
 
 **Goal:** Tenant Admin creates assessments; assessors fill in control responses collaboratively.
 
 ### Tasks
-- [ ] `src/app/api/assessments/route.ts`: GET (tenant-scoped list), POST (create + bulk-create stubs)
-- [ ] `src/app/api/assessments/[assessmentId]/route.ts`: GET, PATCH, DELETE
-- [ ] `src/app/api/assessments/[assessmentId]/controls/route.ts`: GET all responses
-- [ ] `src/app/api/assessments/[assessmentId]/controls/[controlId]/route.ts`: PUT (upsert)
-- [ ] `src/app/(dashboard)/assessments/page.tsx`: assessment list
-- [ ] `src/app/(dashboard)/assessments/new/page.tsx`: create (framework, name, deadline)
-- [ ] `src/app/(dashboard)/assessments/[assessmentId]/page.tsx`: overview + controls list
-- [ ] `src/app/(dashboard)/assessments/[assessmentId]/controls/[controlId]/page.tsx`: response form
-- [ ] Response form: maturity 1–5 (NIST CSF) or status dropdown + notes + optional deadline
-- [ ] Tests: create assessment, upsert response, auto-create stubs
+- [x] `src/app/api/assessments/route.ts`: GET (tenant-scoped list), POST (create + auto-stub responses)
+- [x] `src/app/api/assessments/[assessmentId]/route.ts`: GET, PATCH, DELETE
+- [x] `src/app/api/assessments/[assessmentId]/controls/route.ts`: GET all responses (joined w/ control+domain)
+- [x] `src/app/api/assessments/[assessmentId]/controls/[controlId]/route.ts`: PUT (upsert)
+- [x] `src/app/dashboard/assessments/page.tsx`: assessment list (with progress bars)
+- [x] `src/app/dashboard/assessments/new/page.tsx` + `components/assessments/NewAssessmentForm.tsx`
+- [x] `src/app/dashboard/assessments/[assessmentId]/page.tsx`: overview + controls grouped by domain
+- [x] `src/app/dashboard/assessments/[assessmentId]/controls/[controlId]/page.tsx` + `ControlResponseForm.tsx`
+- [x] Response form: maturity 1–5 (NIST CSF) or status dropdown + notes + optional deadline
+- [x] Tests: create assessment + auto-stub, upsert response, RBAC (13 tests)
 
 ### Acceptance criteria
-- Creating assessment auto-stubs all controls as NOT_STARTED
-- Any assessor in the tenant can update any control response
-- NIST CSF shows maturity selector; others show status dropdown
+- [x] Creating assessment auto-stubs all controls as NOT_STARTED
+- [x] Any assessor in the tenant can update any control response (collaborative upsert)
+- [x] NIST CSF shows maturity selector; others show status dropdown
+
+### Notes
+- Pages use the explicit `dashboard/` folder (not the `(dashboard)` route group named in the original plan), consistent with the project's routing decision.
+- RBAC: list/view/update-response = ASSESSOR; create/patch/delete assessment = ADMIN (Super Admin bypasses).
+- Completion % on list & detail = (IMPLEMENTED + NOT_APPLICABLE) / total responses.
 
 ---
 
