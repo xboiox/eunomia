@@ -202,7 +202,7 @@ npm run test:run    # single run
 npm run test:coverage  # with coverage report
 ```
 
-Current: **90 tests, 9 test files, all passing** (CI runs lint + typecheck + test on every push)
+Current: **96 tests, 9 test files, all passing** (CI runs lint + typecheck + test on every push)
 
 Test files:
 - `src/lib/license/__tests__/` — validate, cookie, check (20 tests)
@@ -210,7 +210,7 @@ Test files:
 - `src/app/api/tenants/__tests__/route.test.ts` — tenant API (5 tests)
 - `src/app/api/users/__tests__/route.test.ts` — user API (6 tests)
 - `src/app/api/frameworks/__tests__/route.test.ts` — framework API (5 tests)
-- `src/app/api/assessments/__tests__/route.test.ts` — assessment API + response upsert (13 tests)
+- `src/app/api/assessments/__tests__/route.test.ts` — assessment API (create/patch/delete) + response upsert (19 tests)
 - `prisma/seeds/__tests__/seed-data.test.ts` — framework seed integrity (29 tests)
 
 ---

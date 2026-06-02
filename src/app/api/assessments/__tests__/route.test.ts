@@ -155,6 +155,75 @@ describe("POST /api/assessments", () => {
   });
 });
 
+describe("PATCH /api/assessments/[assessmentId]", () => {
+  async function callPatch(body: unknown, role = true, session: unknown = makeSession()) {
+    const { getAuthSession } = await import("@/lib/auth/session");
+    const { hasMinimumTenantRole } = await import("@/lib/auth/rbac");
+    const { prisma } = await import("@/lib/prisma/client");
+    vi.mocked(getAuthSession).mockResolvedValue(session as never);
+    vi.mocked(prisma.assessment.findUnique).mockResolvedValue({ id: "a-1", tenantId: "t-1" } as never);
+    vi.mocked(hasMinimumTenantRole).mockResolvedValue(role);
+    vi.mocked(prisma.assessment.update).mockResolvedValue({ id: "a-1" } as never);
+    const { PATCH } = await import("../[assessmentId]/route");
+    return PATCH(jsonRequest("http://localhost/x", "PATCH", body), {
+      params: Promise.resolve({ assessmentId: "a-1" }),
+    });
+  }
+
+  it("updates status for a Tenant Admin", async () => {
+    const res = await callPatch({ status: "IN_PROGRESS" });
+    expect(res.status).toBe(200);
+  });
+
+  it("rejects an invalid status", async () => {
+    const res = await callPatch({ status: "NOPE" });
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 403 for a non-admin", async () => {
+    const res = await callPatch({ status: "COMPLETED" }, false);
+    expect(res.status).toBe(403);
+  });
+
+  it("returns 404 when the assessment does not exist", async () => {
+    const { getAuthSession } = await import("@/lib/auth/session");
+    const { prisma } = await import("@/lib/prisma/client");
+    vi.mocked(getAuthSession).mockResolvedValue(makeSession());
+    vi.mocked(prisma.assessment.findUnique).mockResolvedValue(null);
+    const { PATCH } = await import("../[assessmentId]/route");
+    const res = await PATCH(jsonRequest("http://localhost/x", "PATCH", { status: "DRAFT" }), {
+      params: Promise.resolve({ assessmentId: "missing" }),
+    });
+    expect(res.status).toBe(404);
+  });
+});
+
+describe("DELETE /api/assessments/[assessmentId]", () => {
+  async function callDelete(role: boolean) {
+    const { getAuthSession } = await import("@/lib/auth/session");
+    const { hasMinimumTenantRole } = await import("@/lib/auth/rbac");
+    const { prisma } = await import("@/lib/prisma/client");
+    vi.mocked(getAuthSession).mockResolvedValue(makeSession());
+    vi.mocked(prisma.assessment.findUnique).mockResolvedValue({ id: "a-1", tenantId: "t-1" } as never);
+    vi.mocked(hasMinimumTenantRole).mockResolvedValue(role);
+    vi.mocked(prisma.assessment.delete).mockResolvedValue({ id: "a-1" } as never);
+    const { DELETE } = await import("../[assessmentId]/route");
+    return DELETE(new NextRequest("http://localhost/x", { method: "DELETE" }), {
+      params: Promise.resolve({ assessmentId: "a-1" }),
+    });
+  }
+
+  it("deletes for a Tenant Admin", async () => {
+    const res = await callDelete(true);
+    expect(res.status).toBe(200);
+  });
+
+  it("returns 403 for a non-admin", async () => {
+    const res = await callDelete(false);
+    expect(res.status).toBe(403);
+  });
+});
+
 describe("PUT /api/assessments/[assessmentId]/controls/[controlId]", () => {
   async function callPut(body: unknown, role = true, session: unknown = makeSession()) {
     const { getAuthSession } = await import("@/lib/auth/session");

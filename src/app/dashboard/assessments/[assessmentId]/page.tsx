@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { getAuthSession } from "@/lib/auth/session";
 import { hasMinimumTenantRole } from "@/lib/auth/rbac";
 import { prisma } from "@/lib/prisma/client";
+import { AssessmentManageBar } from "@/components/assessments/AssessmentManageBar";
 
 interface PageProps {
   params: Promise<{ assessmentId: string }>;
@@ -33,6 +34,8 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
 
   const canAccess = await hasMinimumTenantRole(session.userId, assessment.tenantId, "ASSESSOR");
   if (!canAccess) redirect("/dashboard/assessments");
+
+  const isAdmin = await hasMinimumTenantRole(session.userId, assessment.tenantId, "ADMIN");
 
   const responses = await prisma.controlResponse.findMany({
     where: { assessmentId },
@@ -94,6 +97,15 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
       </p>
       {assessment.description && (
         <p className="mt-2 max-w-3xl text-sm text-gray-600 dark:text-gray-300">{assessment.description}</p>
+      )}
+
+      {/* Manage (Tenant Admin only) */}
+      {isAdmin && (
+        <AssessmentManageBar
+          assessmentId={assessment.id}
+          currentStatus={assessment.status}
+          assessmentName={assessment.name}
+        />
       )}
 
       {/* Progress */}
