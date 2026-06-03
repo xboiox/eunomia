@@ -12,6 +12,11 @@
 # test coverage
 /coverage
 
+# playwright
+/test-results
+/playwright-report
+/playwright/.cache
+
 # env — contains secrets, never commit
 .env
 .env*.local

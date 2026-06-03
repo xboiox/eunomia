@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 interface Option {
   id: string;
@@ -56,6 +57,7 @@ export function NewAssessmentForm({ tenants, frameworks }: NewAssessmentFormProp
         setError(body.error ?? "Failed to create assessment");
         return;
       }
+      toast.success("Assessment created!");
       router.push(`/dashboard/assessments/${body.data.id}`);
       router.refresh();
     } catch {

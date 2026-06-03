@@ -244,16 +244,29 @@ To issue a license: INSERT a row into this table via Supabase Dashboard.
 
 ---
 
-## Phase 7: Polish & Production Readiness
+## Phase 7: Polish & Production Readiness ✅ COMPLETED
 
 ### Tasks
-- [ ] Settings page (upload path, file size, email config)
-- [ ] Loading skeletons, empty states, error boundaries
-- [ ] Toast notifications (react-hot-toast)
-- [ ] Dark mode audit
-- [ ] License expiry warning banner (≤30 days)
-- [ ] Tenant limit warning banner
-- [ ] E2E tests (Playwright): full user flow
+- [x] Settings page: System Configuration section (UPLOAD_DIR, MAX_FILE_SIZE_MB, email host — Super Admin only, read-only)
+- [x] Loading skeletons: `src/app/dashboard/loading.tsx` + `src/app/dashboard/assessments/loading.tsx`; reusable `Skeleton` component
+- [x] Error boundary: `src/app/dashboard/error.tsx` (Next.js App Router convention)
+- [x] Toast notifications: `react-hot-toast` already wired in Providers; added toast.success to NewAssessmentForm + EditAssessmentForm
+- [x] License expiry warning: amber/red banner in dashboard layout (≤30 days) + Settings section detail
+- [x] Tenant limit warning banner: shown in dashboard layout when count ≥ maxTenants (Super Admin only)
+- [x] `AdminBanners` server component in layout handles both banners efficiently (one render path)
+- [x] E2E tests (Playwright): `e2e/auth.spec.ts`, `e2e/assessment.spec.ts`, `e2e/settings.spec.ts` — runs locally against `npm run dev` via `npm run test:e2e`; excluded from Vitest/CI
+- [x] Misc polish: past-deadline warning in both assessment forms, server logger (`src/lib/logger.ts`), console.log cleanup
+
+### Notes
+- Dark mode already implemented via Tailwind `dark:` classes throughout; no audit issues found
+- E2E tests are local-only (require live DB + running server); not added to CI to keep it simple
+- Playwright config: `playwright.config.ts`; set `E2E_EMAIL` + `E2E_PASSWORD` env vars for tests
+
+### Acceptance criteria
+- [x] Dashboard shows meaningful loading state while data fetches
+- [x] Rendering errors display a user-friendly "Something went wrong" screen with retry
+- [x] Super Admin sees banner when license is expiring or tenant limit reached
+- [x] Settings shows upload path, max file size, and email server config
 
 ---
 

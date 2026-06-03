@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 interface EditAssessmentFormProps {
   assessmentId: string;
@@ -61,6 +62,7 @@ export function EditAssessmentForm({
         setError(body.error ?? "Failed to update assessment");
         return;
       }
+      toast.success("Assessment updated!");
       router.push(`/dashboard/assessments/${assessmentId}`);
       router.refresh();
     } catch {

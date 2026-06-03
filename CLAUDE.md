@@ -15,7 +15,7 @@ Built on top of the **Play Next.js** SaaS boilerplate.
 
 ## Current Status
 
-**Phase 6 ✅ Complete — Phase 7 (Polish + E2E) is next.**
+**Phase 7 ✅ Complete — All phases done.**
 
 ```
 Phase 0 ✅  Setup & cleanup
@@ -25,7 +25,7 @@ Phase 3 ✅  Framework seed data + browser UI (3 frameworks, 22 domains, 262 con
 Phase 4 ✅  Assessment management + collaborative control responses
 Phase 5 ✅  Evidence upload/download/delete (local filesystem)
 Phase 6 ✅  Dashboard + Recharts (overview, status donut, domain bar, NIST radar)
-Phase 7 ←   Polish + E2E tests
+Phase 7 ✅  Polish: loading skeletons, error boundary, banners, E2E tests (Playwright)
 ```
 
 ---
@@ -213,6 +213,20 @@ EMAIL_FROM=
 | `src/app/dashboard/settings/page.tsx` | Settings: account info + License status section (Super Admin only) + placeholder |
 | `src/components/dashboard/SignOutButton.tsx` | Sign-out button in sidebar footer (`signOut` from next-auth/react → `/signin`) |
 | `src/components/dashboard/ChangeLicenseKeyForm.tsx` | Collapsible form to change license key (PUTs `/api/license/activate`); status only, never shows the key |
+| `src/components/dashboard/AdminBanners.tsx` | Server component: license expiry + tenant limit banners (Super Admin only); rendered in dashboard layout |
+
+### Polish & E2E (Phase 7)
+| File | Purpose |
+|---|---|
+| `src/components/ui/Skeleton.tsx` | Reusable animated skeleton block for loading states |
+| `src/app/dashboard/loading.tsx` | Overview page loading skeleton (Next.js App Router) |
+| `src/app/dashboard/assessments/loading.tsx` | Assessments list loading skeleton |
+| `src/app/dashboard/error.tsx` | Error boundary for dashboard routes (App Router convention) |
+| `src/lib/logger.ts` | Thin server-side logger wrapper (no-op in test env); use instead of bare console.* |
+| `e2e/auth.spec.ts` | Playwright: sign-in / sign-out / redirect flows |
+| `e2e/assessment.spec.ts` | Playwright: assessment list, create form, deadline warning |
+| `e2e/settings.spec.ts` | Playwright: account info, license section, system config |
+| `playwright.config.ts` | Playwright config: `npm run test:e2e` against local dev server |
 
 ### Account / Settings (Phase 7 polish)
 | File | Purpose |
@@ -239,7 +253,7 @@ npm run test:run    # single run
 npm run test:coverage  # with coverage report
 ```
 
-Current: **146 tests, 14 test files, all passing** (CI: Node 24, lint + typecheck + test on every push)
+Current: **146 unit tests, 14 test files, all passing** + **3 E2E test files** (Playwright, local-only) (CI: Node 24, lint + typecheck + unit test on every push)
 Coverage: statements 82%, functions 90%, lines 85%, branches 75% (threshold: 80/80/80/70)
 
 Test files:

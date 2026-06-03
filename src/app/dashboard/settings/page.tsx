@@ -134,6 +134,44 @@ export default async function SettingsPage() {
           </section>
         )}
 
+        {/* System Configuration — Super Admin only (read-only env info) */}
+        {session.isSuperAdmin && (
+          <section className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-white">System Configuration</h2>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Read-only. Change these values in your <code className="font-mono">.env</code> file and restart the server.
+            </p>
+            <dl className="mt-4 space-y-3">
+              <div className="flex justify-between text-sm">
+                <dt className="text-gray-500 dark:text-gray-400">Evidence upload path</dt>
+                <dd className="font-mono text-xs font-medium text-gray-900 dark:text-white">
+                  {process.env.UPLOAD_DIR ?? "./uploads"}
+                </dd>
+              </div>
+              <div className="flex justify-between text-sm">
+                <dt className="text-gray-500 dark:text-gray-400">Max file size</dt>
+                <dd className="font-medium text-gray-900 dark:text-white">
+                  {process.env.MAX_FILE_SIZE_MB ?? "50"} MB
+                </dd>
+              </div>
+              <div className="flex justify-between text-sm">
+                <dt className="text-gray-500 dark:text-gray-400">Email server</dt>
+                <dd className="font-medium text-gray-900 dark:text-white">
+                  {process.env.EMAIL_SERVER_HOST
+                    ? `${process.env.EMAIL_SERVER_HOST}:${process.env.EMAIL_SERVER_PORT ?? "587"}`
+                    : <span className="text-amber-600 dark:text-amber-400">Not configured</span>}
+                </dd>
+              </div>
+              <div className="flex justify-between text-sm">
+                <dt className="text-gray-500 dark:text-gray-400">Email from</dt>
+                <dd className="font-medium text-gray-900 dark:text-white">
+                  {process.env.EMAIL_FROM ?? <span className="text-gray-400 dark:text-gray-500">—</span>}
+                </dd>
+              </div>
+            </dl>
+          </section>
+        )}
+
         {/* Coming soon */}
         <section className="rounded-xl border border-dashed border-gray-300 p-6 dark:border-gray-700">
           <p className="text-sm text-gray-500 dark:text-gray-400">

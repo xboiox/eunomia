@@ -3,6 +3,7 @@ import { getAuthSession } from "@/lib/auth/session";
 import { getUserTenants } from "@/lib/auth/rbac";
 import { SidebarNav } from "@/components/dashboard/SidebarNav";
 import { SignOutButton } from "@/components/dashboard/SignOutButton";
+import { AdminBanners } from "@/components/dashboard/AdminBanners";
 
 const DashboardIcon = () => (
   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -93,6 +94,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       {/* Main content */}
       <main className="flex flex-1 flex-col overflow-y-auto">
+        <AdminBanners isSuperAdmin={session.isSuperAdmin} />
         {children}
       </main>
     </div>
