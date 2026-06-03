@@ -35,6 +35,28 @@ interface ResponseLike {
   domain: { code: string; name: string; order: number };
   controlCode: string;
   controlName: string;
+  sectionCode?: string | null;
+  sectionName?: string | null;
+}
+
+export interface NistSectionRow {
+  sectionCode: string;
+  sectionName: string;
+  avgMaturity: number;
+  count: number;
+}
+
+export interface NistDomainRow {
+  domainCode: string;
+  domainName: string;
+  order: number;
+  sections: NistSectionRow[];
+  avgMaturity: number;
+}
+
+export interface NistMaturityTableData {
+  domains: NistDomainRow[];
+  overallAvg: number;
 }
 
 const DONE_STATUSES = new Set(["IMPLEMENTED", "NOT_APPLICABLE"]);
@@ -84,6 +106,67 @@ export function calculateNistMaturityByDomain(responses: ResponseLike[]): Domain
           : 0,
     }))
     .sort((a, b) => a.order - b.order);
+}
+
+function avg(levels: number[]): number {
+  if (levels.length === 0) return 0;
+  return Math.round((levels.reduce((a, b) => a + b, 0) / levels.length) * 10) / 10;
+}
+
+// Builds the full NIST maturity table: domain → section rows → domain avg → overall avg.
+// Controls without sectionCode are grouped under a synthetic section matching their domain code.
+export function calculateNistMaturityTable(responses: ResponseLike[]): NistMaturityTableData {
+  // domain → section → levels[]
+  const tree = new Map<
+    string,
+    {
+      name: string;
+      order: number;
+      sections: Map<string, { name: string; levels: number[] }>;
+    }
+  >();
+
+  for (const r of responses) {
+    const dk = r.domain.code;
+    if (!tree.has(dk)) {
+      tree.set(dk, { name: r.domain.name, order: r.domain.order, sections: new Map() });
+    }
+    const domain = tree.get(dk)!;
+
+    const sk = r.sectionCode ?? dk;
+    const sn = r.sectionName ?? r.domain.name;
+    if (!domain.sections.has(sk)) {
+      domain.sections.set(sk, { name: sn, levels: [] });
+    }
+    if (r.maturityLevel != null) {
+      domain.sections.get(sk)!.levels.push(r.maturityLevel);
+    }
+  }
+
+  const allDomainLevels: number[] = [];
+
+  const domains: NistDomainRow[] = Array.from(tree.entries())
+    .sort((a, b) => a[1].order - b[1].order)
+    .map(([domainCode, { name: domainName, order, sections }]) => {
+      const sectionRows: NistSectionRow[] = Array.from(sections.entries()).map(
+        ([sectionCode, { name: sectionName, levels }]) => ({
+          sectionCode,
+          sectionName,
+          avgMaturity: avg(levels),
+          count: levels.length,
+        }),
+      );
+
+      const domainLevels = sectionRows.flatMap((s) =>
+        s.avgMaturity > 0 ? [s.avgMaturity] : [],
+      );
+      const domainAvg = avg(domainLevels);
+      allDomainLevels.push(...domainLevels);
+
+      return { domainCode, domainName, order, sections: sectionRows, avgMaturity: domainAvg };
+    });
+
+  return { domains, overallAvg: avg(allDomainLevels) };
 }
 
 const DEADLINE_WINDOW_DAYS = 30;

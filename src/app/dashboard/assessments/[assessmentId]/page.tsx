@@ -7,10 +7,12 @@ import { prisma } from "@/lib/prisma/client";
 import {
   calculateCompletion,
   calculateNistMaturityByDomain,
+  calculateNistMaturityTable,
   groupByStatus,
 } from "@/lib/utils/compliance";
 import { AssessmentManageBar } from "@/components/assessments/AssessmentManageBar";
 import { AssessmentControls } from "@/components/assessments/AssessmentControls";
+import { NistMaturityTable } from "@/components/assessments/NistMaturityTable";
 import { StatusBreakdownChart } from "@/components/charts/StatusBreakdownChart";
 import { DomainProgressChart } from "@/components/charts/DomainProgressChart";
 import { MaturityRadarChart } from "@/components/charts/MaturityRadarChart";
@@ -43,6 +45,8 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
           id: true,
           code: true,
           name: true,
+          sectionCode: true,
+          sectionName: true,
           order: true,
           domain: { select: { id: true, code: true, name: true, order: true } },
         },
@@ -61,9 +65,12 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
     domain: r.control.domain,
     controlCode: r.control.code,
     controlName: r.control.name,
+    sectionCode: r.control.sectionCode,
+    sectionName: r.control.sectionName,
   }));
 
   const statusCounts = groupByStatus(responsesForCalc);
+  const nistTableData = isNist ? calculateNistMaturityTable(responsesForCalc) : null;
 
   // Per-domain completion % for bar chart
   const domainMap = new Map<string, { name: string; order: number; done: number; total: number }>();
@@ -134,32 +141,56 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
         />
       )}
 
-      {/* ── Charts ────────────────────────────────────────────── */}
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        {/* Status breakdown donut */}
-        <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Status Breakdown</h2>
-            <span className="text-lg font-bold text-gray-900 dark:text-white">
-              {pct}%{" "}
-              <span className="text-xs font-normal text-gray-400">({done}/{total})</span>
-            </span>
-          </div>
-          <StatusBreakdownChart counts={statusCounts} isNist={isNist} />
-        </div>
-
-        {/* NIST radar OR domain progress */}
-        {isNist ? (
+      {/* ── NIST: radar + maturity table ─────────────────────── */}
+      {isNist && nistTableData && (
+        <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          {/* Radar chart */}
           <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
             <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
-              Avg Maturity by Function
+              Overall Maturity Score:{" "}
+              <span className="text-blue-600 dark:text-blue-400">
+                {nistTableData.overallAvg > 0 ? nistTableData.overallAvg.toFixed(1) : "—"}
+              </span>
             </h2>
             <p className="mt-0.5 text-xs text-gray-400">
               Scale 1 (Ad-Hoc) → 5 (Industry Best)
             </p>
             <MaturityRadarChart domains={nistDomainMaturity} />
           </div>
-        ) : (
+
+          {/* Completion % per function */}
+          <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+              Completion by Function
+            </h2>
+            <div className="mt-3">
+              <DomainProgressChart domains={domainProgress} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* NIST maturity detail table */}
+      {isNist && nistTableData && (
+        <div className="mt-6">
+          <NistMaturityTable data={nistTableData} />
+        </div>
+      )}
+
+      {/* ── Non-NIST: status donut + domain bar ───────────────── */}
+      {!isNist && (
+        <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+            <div className="flex items-baseline justify-between">
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Status Breakdown</h2>
+              <span className="text-lg font-bold text-gray-900 dark:text-white">
+                {pct}%{" "}
+                <span className="text-xs font-normal text-gray-400">({done}/{total})</span>
+              </span>
+            </div>
+            <StatusBreakdownChart counts={statusCounts} isNist={false} />
+          </div>
+
           <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
             <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
               Completion by Domain
@@ -167,18 +198,6 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
             <div className="mt-3">
               <DomainProgressChart domains={domainProgress} />
             </div>
-          </div>
-        )}
-      </div>
-
-      {/* Domain progress bar for NIST (in addition to radar) */}
-      {isNist && (
-        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
-            Completion by Function
-          </h2>
-          <div className="mt-3">
-            <DomainProgressChart domains={domainProgress} />
           </div>
         </div>
       )}

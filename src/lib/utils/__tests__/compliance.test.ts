@@ -3,6 +3,7 @@ import {
   calculateCompletion,
   groupByStatus,
   calculateNistMaturityByDomain,
+  calculateNistMaturityTable,
   getUpcomingDeadlines,
 } from "../compliance";
 
@@ -101,6 +102,78 @@ describe("calculateNistMaturityByDomain", () => {
     const result = calculateNistMaturityByDomain(responses);
     expect(result[0].code).toBe("GV");
     expect(result[1].code).toBe("ID");
+  });
+});
+
+describe("calculateNistMaturityTable", () => {
+  function makeNistResponse(
+    sectionCode: string,
+    sectionName: string,
+    domainCode: string,
+    domainName: string,
+    order: number,
+    maturityLevel: number | null,
+  ) {
+    return {
+      status: "IN_PROGRESS",
+      maturityLevel,
+      deadline: null,
+      domain: { code: domainCode, name: domainName, order },
+      controlCode: `${sectionCode}-01`,
+      controlName: "Control",
+      sectionCode,
+      sectionName,
+    };
+  }
+
+  it("groups sections within domains and computes domain averages", () => {
+    const responses = [
+      makeNistResponse("GV.OC", "Organizational Context", "GV", "Govern", 1, 3),
+      makeNistResponse("GV.OC", "Organizational Context", "GV", "Govern", 1, 5),
+      makeNistResponse("GV.RM", "Risk Management Strategy", "GV", "Govern", 1, 2),
+      makeNistResponse("ID.AM", "Asset Management", "ID", "Identify", 2, 4),
+    ];
+    const result = calculateNistMaturityTable(responses);
+
+    expect(result.domains).toHaveLength(2);
+    const gv = result.domains[0];
+    expect(gv.domainCode).toBe("GV");
+    expect(gv.sections).toHaveLength(2);
+
+    const oc = gv.sections.find((s) => s.sectionCode === "GV.OC")!;
+    expect(oc.avgMaturity).toBe(4); // (3+5)/2
+
+    const rm = gv.sections.find((s) => s.sectionCode === "GV.RM")!;
+    expect(rm.avgMaturity).toBe(2);
+
+    expect(gv.avgMaturity).toBe(3); // avg of section avgs (4+2)/2
+  });
+
+  it("computes overallAvg across all domains", () => {
+    const responses = [
+      makeNistResponse("GV.OC", "OC", "GV", "Govern", 1, 2),
+      makeNistResponse("ID.AM", "AM", "ID", "Identify", 2, 4),
+    ];
+    const { overallAvg } = calculateNistMaturityTable(responses);
+    expect(overallAvg).toBe(3); // avg of domain avgs (2+4)/2
+  });
+
+  it("returns overallAvg 0 when no maturity levels set", () => {
+    const responses = [
+      makeNistResponse("GV.OC", "OC", "GV", "Govern", 1, null),
+    ];
+    const { overallAvg } = calculateNistMaturityTable(responses);
+    expect(overallAvg).toBe(0);
+  });
+
+  it("is ordered by domain.order", () => {
+    const responses = [
+      makeNistResponse("ID.AM", "AM", "ID", "Identify", 2, 3),
+      makeNistResponse("GV.OC", "OC", "GV", "Govern", 1, 2),
+    ];
+    const { domains } = calculateNistMaturityTable(responses);
+    expect(domains[0].domainCode).toBe("GV");
+    expect(domains[1].domainCode).toBe("ID");
   });
 });
 
