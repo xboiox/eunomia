@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("@/lib/logger", () => ({
+  logger: { warn: vi.fn(), error: vi.fn(), info: vi.fn() },
+}));
+
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
 
@@ -107,14 +111,14 @@ describe("validateLicenseKey", () => {
       json: async () => [{ max_tenants: 3, license_type: "standard", is_active: true }],
     } as Response);
 
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { logger } = await import("@/lib/logger");
     const { validateLicenseKey } = await import("../validate");
     const result = await validateLicenseKey("LEGACY-KEY");
 
     expect(result.valid).toBe(true);
     expect(result.maxTenants).toBe(3);
     expect(result.expiresAt).toBeNull();
-    expect(warnSpy).toHaveBeenCalledOnce();
+    expect(logger.warn).toHaveBeenCalledOnce();
     expect(mockFetch).toHaveBeenCalledTimes(2);
   });
 

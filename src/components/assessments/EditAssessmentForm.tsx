@@ -15,6 +15,12 @@ interface EditAssessmentFormProps {
   tenantName: string;
 }
 
+function todayIso(): string {
+  const now = new Date();
+  const offsetMs = now.getTimezoneOffset() * 60 * 1000;
+  return new Date(now.getTime() - offsetMs).toISOString().slice(0, 10);
+}
+
 const inputClass =
   "mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white";
 
@@ -33,6 +39,8 @@ export function EditAssessmentForm({
   const [overallDeadline, setOverallDeadline] = useState(initial.overallDeadline);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  const isPastDeadline = overallDeadline !== "" && overallDeadline < todayIso();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -103,15 +111,22 @@ export function EditAssessmentForm({
         />
       </label>
 
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Overall deadline <span className="text-gray-400">(optional)</span>
-        <input
-          type="date"
-          value={overallDeadline}
-          onChange={(e) => setOverallDeadline(e.target.value)}
-          className={inputClass}
-        />
-      </label>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Overall deadline <span className="text-gray-400">(optional)</span>
+          <input
+            type="date"
+            value={overallDeadline}
+            onChange={(e) => setOverallDeadline(e.target.value)}
+            className={inputClass}
+          />
+        </label>
+        {isPastDeadline && (
+          <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+            This date is in the past. You can still save it if this is intentional.
+          </p>
+        )}
+      </div>
 
       <div className="flex gap-3 pt-2">
         <button

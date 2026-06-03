@@ -20,6 +20,8 @@ interface SupabaseLicenseRow {
   is_active: boolean;
 }
 
+import { logger } from "@/lib/logger";
+
 // PostgREST error code for "undefined column" (Postgres SQLSTATE 42703).
 const UNDEFINED_COLUMN_CODE = "42703";
 
@@ -84,8 +86,8 @@ export async function validateLicenseKey(
     // The license_keys table may predate the optional expires_at column.
     // Fall back to a select without it and treat such licenses as perpetual.
     if (outcome.kind === "missing_expires_at") {
-      console.warn(
-        "[license] 'expires_at' column not found in license_keys; treating licenses as perpetual. " +
+      logger.warn(
+        "'expires_at' column not found in license_keys; treating licenses as perpetual. " +
           "Add it with: alter table license_keys add column if not exists expires_at timestamptz;",
       );
       outcome = await queryLicenseRows(baseUrl, headers, FALLBACK_SELECT);
