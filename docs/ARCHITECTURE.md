@@ -282,7 +282,7 @@ Controls seeded once at deployment via `prisma db seed`. Hierarchy:
 Framework (e.g. NIST_CSF v2.0)
 └── ControlDomain        ← top-level grouping
     │  NIST CSF: Function (GV, ID, PR, DE, RS, RC)
-    │  ISO 27001/27002: Theme (Organizational, People, Physical, Technological)
+    │  ISO 27001: Theme (Organizational, People, Physical, Technological)
     │  PCI DSS: Requirement (Req-1 … Req-12)
     │
     └── Control          ← assessable unit
@@ -292,8 +292,8 @@ Framework (e.g. NIST_CSF v2.0)
 ```
 
 **Assessment response per framework:**
-- NIST CSF: `maturityLevel` (1–5 integer)
-- ISO 27001, ISO 27002, PCI DSS: `ComplianceStatus` enum (NOT_STARTED / IN_PROGRESS / IMPLEMENTED / NOT_APPLICABLE)
+- NIST CSF: `maturityLevel` (1–5 integer); status presented as Not started / In progress / Done (Done = `IMPLEMENTED`, `NOT_APPLICABLE` hidden)
+- ISO 27001, PCI DSS: `ComplianceStatus` enum (NOT_STARTED / IN_PROGRESS / IMPLEMENTED / NOT_APPLICABLE)
 
 ---
 

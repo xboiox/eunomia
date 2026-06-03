@@ -122,7 +122,6 @@ model Framework {
 enum FrameworkCode {
   NIST_CSF
   ISO_27001
-  ISO_27002
   PCI_DSS
 }
 

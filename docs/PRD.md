@@ -8,7 +8,7 @@
 
 ## Problem Statement
 
-Organizations need to demonstrate compliance with security frameworks (NIST CSF, ISO 27001, ISO 27002, PCI DSS) but lack a structured, internal tool to:
+Organizations need to demonstrate compliance with security frameworks (NIST CSF, ISO 27001, PCI DSS) but lack a structured, internal tool to:
 - Track assessment progress per control
 - Manage and store evidence files securely
 - Monitor compliance completeness and deadlines
@@ -30,10 +30,11 @@ Organizations need to demonstrate compliance with security frameworks (NIST CSF,
 
 | Framework | Version | Assessment Model |
 |---|---|---|
-| NIST Cybersecurity Framework | v2.0 | Maturity Level 1–5 per subcategory |
-| ISO/IEC 27001 | 2022 | Not Started / In Progress / Implemented / Not Applicable |
-| ISO/IEC 27002 | 2022 | Not Started / In Progress / Implemented / Not Applicable |
+| NIST Cybersecurity Framework | v2.0 | Maturity Level 1–5 per subcategory; status shown as Not Started / In Progress / Done |
+| ISO/IEC 27001 | 2022 | Not Started / In Progress / Implemented / Not Applicable (carries ISO 27002 implementation guidance) |
 | PCI DSS | v4.0.1 | Not Started / In Progress / Implemented / Not Applicable |
+
+> ISO/IEC 27002:2022 is not a separate assessable framework — it is the implementation guidance for ISO 27001's Annex A controls, so its guidance is attached to the ISO 27001 controls.
 
 ---
 

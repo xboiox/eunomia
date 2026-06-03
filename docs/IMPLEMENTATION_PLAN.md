@@ -112,9 +112,9 @@ To issue a license: INSERT a row into this table via Supabase Dashboard.
 
 ### Tasks
 - [x] `prisma/seeds/framework-nist-csf.ts` — NIST CSF v2.0 (6 Functions, 106 Subcategories)
-- [x] `prisma/seeds/framework-iso-27001.ts` — ISO 27001:2022 (4 Themes, 93 controls)
-- [x] `prisma/seeds/framework-iso-27002.ts` — ISO 27002:2022 (reuses 27001's 93 controls + guidance)
+- [x] `prisma/seeds/framework-iso-27001.ts` — ISO 27001:2022 (4 Themes, 93 controls) + ISO 27002 guidance (`GUIDANCE_ADDITIONS`)
 - [x] `prisma/seeds/framework-pci-dss.ts` — PCI DSS v4.0.1 (12 Requirements, 63 sub-requirements)
+- (ISO 27002 was initially a separate seed; later removed — its guidance folded into ISO 27001, see migration `remove_iso_27002`)
 - [x] `prisma/seed.ts` — orchestrate all seeds (idempotent upserts)
 - [x] Configure seed in `prisma.config.ts` (`migrations.seed = "tsx prisma/seed.ts"`) + `db:seed`/`db:migrate`/`db:generate` scripts in package.json
 - [x] `src/app/api/frameworks/route.ts`: GET frameworks list (with domain/control counts)
@@ -124,13 +124,13 @@ To issue a license: INSERT a row into this table via Supabase Dashboard.
 - [x] Tests: `prisma/seeds/__tests__/seed-data.test.ts` — counts, uniqueness, required fields, NIST section integrity (29 tests)
 
 ### Acceptance criteria
-- [x] `prisma db seed` populates all 4 frameworks correctly and is safe to re-run (idempotent upserts)
+- [x] `prisma db seed` populates all frameworks correctly and is safe to re-run (idempotent upserts)
 - [x] Framework browser shows controls grouped by domain/section
 
 ### Notes
 - Seed uses `tsx` (added as devDependency). Each seed function upserts by unique key, so re-running is safe.
-- ISO 27002 deliberately reuses `ISO_27001_DOMAINS` (identical 93 Annex A controls) and layers in implementation guidance via a `GUIDANCE_ADDITIONS` map.
-- Seed counts: 4 frameworks · 26 domains · 355 controls total (NIST 106, ISO 27001 93, ISO 27002 93, PCI DSS 63).
+- ISO 27002's implementation guidance is folded into the ISO 27001 controls (`GUIDANCE_ADDITIONS` in `framework-iso-27001.ts`); it is not a separate framework.
+- Seed counts: **3 frameworks · 22 domains · 262 controls** total (NIST 106, ISO 27001 93, PCI DSS 63).
 
 ---
 

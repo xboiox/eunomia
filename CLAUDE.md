@@ -2,7 +2,7 @@
 
 ## What This Is
 
-**Eunomia** is a self-hosted IT Security Compliance Dashboard. It allows organizations to perform self-assessments against major security frameworks (NIST CSF, ISO 27001, ISO 27002, PCI DSS), manage evidence, and track compliance progress.
+**Eunomia** is a self-hosted IT Security Compliance Dashboard. It allows organizations to perform self-assessments against major security frameworks (NIST CSF, ISO 27001, PCI DSS), manage evidence, and track compliance progress.
 
 Built on top of the **Play Next.js** SaaS boilerplate.
 
@@ -21,7 +21,7 @@ Built on top of the **Play Next.js** SaaS boilerplate.
 Phase 0 ✅  Setup & cleanup
 Phase 1 ✅  License activation (Supabase daily check + Web UI)
 Phase 2 ✅  Auth + multi-tenancy + RBAC + dashboard shell
-Phase 3 ✅  Framework seed data + browser UI (4 frameworks, 26 domains, 355 controls)
+Phase 3 ✅  Framework seed data + browser UI (3 frameworks, 22 domains, 262 controls)
 Phase 4 ✅  Assessment management + collaborative control responses
 Phase 5 ←   Evidence upload (local filesystem)
 Phase 6     Dashboard + Recharts
@@ -52,10 +52,11 @@ Phase 7     Polish + E2E tests
 
 | Framework | Version | Controls | Assessment Model |
 |---|---|---|---|
-| NIST CSF | v2.0 | ~106 subcategories | Maturity level 1–5 |
+| NIST CSF | v2.0 | 106 subcategories | Maturity level 1–5; status shown as Not started / In progress / Done (Done = `IMPLEMENTED`, `NOT_APPLICABLE` hidden) |
 | ISO/IEC 27001 | 2022 | 93 (Annex A) | NOT_STARTED / IN_PROGRESS / IMPLEMENTED / NOT_APPLICABLE |
-| ISO/IEC 27002 | 2022 | 93 (same as 27001 + guidance) | Same enum as above |
-| PCI DSS | v4.0.1 | 12 requirements + sub-requirements | Same enum as above |
+| PCI DSS | v4.0.1 | 12 requirements + 63 sub-requirements | Same enum as 27001 |
+
+> ISO/IEC 27002:2022 is **not** a separate framework — it is the implementation guidance for the same Annex A controls, so its guidance lives on the ISO 27001 controls (`guidance` field, via `GUIDANCE_ADDITIONS` in `framework-iso-27001.ts`).
 
 ---
 
@@ -163,8 +164,7 @@ EMAIL_FROM=
 | File | Purpose |
 |---|---|
 | `prisma/seeds/framework-nist-csf.ts` | NIST CSF v2.0 data + `seedNistCsf()` (6 domains, 106 subcategories) |
-| `prisma/seeds/framework-iso-27001.ts` | ISO 27001:2022 data + `seedIso27001()` (4 themes, 93 controls) |
-| `prisma/seeds/framework-iso-27002.ts` | ISO 27002:2022 — reuses `ISO_27001_DOMAINS` + `GUIDANCE_ADDITIONS` |
+| `prisma/seeds/framework-iso-27001.ts` | ISO 27001:2022 data + `seedIso27001()` (4 themes, 93 controls) + `GUIDANCE_ADDITIONS` (ex-ISO 27002 guidance) |
 | `prisma/seeds/framework-pci-dss.ts` | PCI DSS v4.0.1 data + `seedPciDss()` (12 requirements, 63 sub-reqs) |
 | `prisma/seed.ts` | Orchestrator — runs all 4 seeds (idempotent); `npm run db:seed` |
 | `src/app/api/frameworks/route.ts` | GET frameworks list with domain/control counts |
@@ -181,7 +181,7 @@ EMAIL_FROM=
 | `src/app/api/assessments/[assessmentId]/controls/[controlId]/route.ts` | PUT upsert response (ASSESSOR, collaborative) |
 | `src/app/dashboard/assessments/page.tsx` | List with progress bars |
 | `src/app/dashboard/assessments/new/page.tsx` + `components/assessments/NewAssessmentForm.tsx` | Create form |
-| `src/app/dashboard/assessments/[assessmentId]/page.tsx` | Overview + controls grouped by domain |
+| `src/app/dashboard/assessments/[assessmentId]/page.tsx` + `components/assessments/AssessmentControls.tsx` | Overview + clickable status filter + controls grouped by domain |
 | `src/app/dashboard/assessments/[assessmentId]/controls/[controlId]/page.tsx` + `components/assessments/ControlResponseForm.tsx` | Response form (maturity for NIST, status otherwise) |
 
 ### Infrastructure
@@ -202,7 +202,7 @@ npm run test:run    # single run
 npm run test:coverage  # with coverage report
 ```
 
-Current: **96 tests, 9 test files, all passing** (CI runs lint + typecheck + test on every push)
+Current: **95 tests, 9 test files, all passing** (CI runs lint + typecheck + test on every push)
 
 Test files:
 - `src/lib/license/__tests__/` — validate, cookie, check (20 tests)

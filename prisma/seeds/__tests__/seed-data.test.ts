@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import { NIST_CSF_META, NIST_CSF_DOMAINS } from "../framework-nist-csf";
 import { ISO_27001_META, ISO_27001_DOMAINS } from "../framework-iso-27001";
-import { ISO_27002_META } from "../framework-iso-27002";
 import { PCI_DSS_META, PCI_DSS_DOMAINS } from "../framework-pci-dss";
 
 interface SeedControl {
@@ -46,7 +45,6 @@ describe("framework metadata", () => {
   const metas: SeedMeta[] = [
     NIST_CSF_META,
     ISO_27001_META,
-    ISO_27002_META,
     PCI_DSS_META,
   ];
 
@@ -124,12 +122,8 @@ describe("NIST CSF specifics", () => {
   });
 });
 
-describe("ISO 27002 reuses ISO 27001 controls", () => {
-  it("shares the same control codes as ISO 27001", () => {
-    const iso27001Codes = allControls(ISO_27001_DOMAINS as SeedDomain[])
-      .map((c) => c.code)
-      .sort();
-    // ISO 27002 seeds from ISO_27001_DOMAINS, so its control set is identical.
-    expect(iso27001Codes).toHaveLength(93);
+describe("ISO 27001 guidance", () => {
+  it("has 93 Annex A controls", () => {
+    expect(allControls(ISO_27001_DOMAINS as SeedDomain[])).toHaveLength(93);
   });
 });

@@ -147,14 +147,13 @@ model Framework {
 
 enum FrameworkCode {
   NIST_CSF   // NIST CSF v2.0
-  ISO_27001  // ISO/IEC 27001:2022
-  ISO_27002  // ISO/IEC 27002:2022
+  ISO_27001  // ISO/IEC 27001:2022 (carries ISO 27002 implementation guidance)
   PCI_DSS    // PCI DSS v4.0.1
 }
 
 // Top-level grouping within a framework
 // NIST CSF: Function (Govern, Identify, Protect, Detect, Respond, Recover)
-// ISO 27001/27002: Theme (Organizational, People, Physical, Technological)
+// ISO 27001: Theme (Organizational, People, Physical, Technological)
 // PCI DSS: Requirement (Req-1 through Req-12)
 model ControlDomain {
   id          String    @id @default(cuid())
@@ -170,7 +169,7 @@ model ControlDomain {
 
 // Individual assessable control
 // NIST CSF: Subcategory (e.g. GV.OC-01) — sectionCode = Category code
-// ISO 27001/27002: Control (e.g. 5.1)
+// ISO 27001: Control (e.g. 5.1)
 // PCI DSS: Sub-requirement (e.g. 1.1.1)
 model Control {
   id           String          @id @default(cuid())
@@ -263,7 +262,7 @@ model Evidence {
 
 ### Separate status fields for NIST CSF
 - `maturityLevel Int?` — used only when `framework.code = NIST_CSF` (values 1–5)
-- `status ComplianceStatus` — used for ISO 27001, ISO 27002, PCI DSS
+- `status ComplianceStatus` — used for ISO 27001, PCI DSS (NIST CSF maps it to Not started / In progress / Done)
 - At the application layer, the correct field is used based on the framework
 
 ### sectionCode / sectionName on Control
@@ -299,5 +298,5 @@ Framework seed order:
 Seed files location: `prisma/seeds/`
 - `framework-nist-csf.ts` — NIST CSF v2.0 (6 functions, ~106 subcategories)
 - `framework-iso-27001.ts` — ISO 27001:2022 (4 themes, 93 controls)
-- `framework-iso-27002.ts` — ISO 27002:2022 (4 themes, 93 controls + guidance)
+  (ISO 27002 guidance is folded into the ISO 27001 controls, not a separate framework)
 - `framework-pci-dss.ts` — PCI DSS v4.0.1 (12 requirements + sub-requirements)

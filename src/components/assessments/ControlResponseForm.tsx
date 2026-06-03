@@ -3,11 +3,19 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-const STATUS_OPTIONS = [
+// NIST CSF is maturity-based, so it uses a simpler status set where "Done"
+// maps to the shared IMPLEMENTED enum value and "Not applicable" is hidden.
+const STATUS_OPTIONS_DEFAULT = [
   { value: "NOT_STARTED", label: "Not started" },
   { value: "IN_PROGRESS", label: "In progress" },
   { value: "IMPLEMENTED", label: "Implemented" },
   { value: "NOT_APPLICABLE", label: "Not applicable" },
+];
+
+const STATUS_OPTIONS_NIST = [
+  { value: "NOT_STARTED", label: "Not started" },
+  { value: "IN_PROGRESS", label: "In progress" },
+  { value: "IMPLEMENTED", label: "Done" },
 ];
 
 const MATURITY_LEVELS = [
@@ -53,6 +61,8 @@ export function ControlResponseForm({
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
+  const statusOptions = isNist ? STATUS_OPTIONS_NIST : STATUS_OPTIONS_DEFAULT;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -90,7 +100,7 @@ export function ControlResponseForm({
       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
         Status
         <select value={status} onChange={(e) => setStatus(e.target.value)} className={inputClass}>
-          {STATUS_OPTIONS.map((o) => (
+          {statusOptions.map((o) => (
             <option key={o.value} value={o.value}>{o.label}</option>
           ))}
         </select>

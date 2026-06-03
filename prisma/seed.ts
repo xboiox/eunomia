@@ -3,7 +3,6 @@ import { PrismaClient } from "@prisma/client";
 
 import { seedNistCsf } from "./seeds/framework-nist-csf";
 import { seedIso27001 } from "./seeds/framework-iso-27001";
-import { seedIso27002 } from "./seeds/framework-iso-27002";
 import { seedPciDss } from "./seeds/framework-pci-dss";
 
 function createPrismaClient(): PrismaClient {
@@ -26,9 +25,6 @@ async function main(): Promise<void> {
 
     const iso27001 = await seedIso27001(prisma);
     console.log(`  ✓ ${iso27001.code} (${iso27001.version})`);
-
-    const iso27002 = await seedIso27002(prisma);
-    console.log(`  ✓ ${iso27002.code} (${iso27002.version})`);
 
     const pci = await seedPciDss(prisma);
     console.log(`  ✓ ${pci.code} (${pci.version})`);
