@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { NIST_MATURITY_DATA } from "./nist-maturity-data";
 
 export const NIST_CSF_META = {
   code: "NIST_CSF" as const,
@@ -210,10 +211,24 @@ export async function seedNistCsf(prisma: PrismaClient) {
     });
 
     for (const control of controls) {
+      const extra = NIST_MATURITY_DATA[control.code];
       await prisma.control.upsert({
         where: { domainId_code: { domainId: createdDomain.id, code: control.code } },
-        update: { name: control.name, description: control.description, sectionCode: control.sectionCode, sectionName: control.sectionName, order: control.order },
-        create: { ...control, domainId: createdDomain.id },
+        update: {
+          name: control.name,
+          description: control.description,
+          sectionCode: control.sectionCode,
+          sectionName: control.sectionName,
+          order: control.order,
+          maturityCriteria: extra?.maturityCriteria ?? undefined,
+          implementationExamples: extra?.implementationExamples ?? null,
+        },
+        create: {
+          ...control,
+          domainId: createdDomain.id,
+          maturityCriteria: extra?.maturityCriteria ?? undefined,
+          implementationExamples: extra?.implementationExamples ?? null,
+        },
       });
     }
   }

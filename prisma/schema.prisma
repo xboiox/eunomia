@@ -141,17 +141,19 @@ model ControlDomain {
 
 // Assessable control: Subcategory (NIST CSF), Control (ISO), Sub-requirement (PCI DSS)
 model Control {
-  id          String            @id @default(cuid())
-  domainId    String
-  code        String
-  sectionCode String?
-  sectionName String?
-  name        String
-  description String?           @db.Text
-  guidance    String?           @db.Text
-  order       Int
-  domain      ControlDomain     @relation(fields: [domainId], references: [id])
-  responses   ControlResponse[]
+  id                     String            @id @default(cuid())
+  domainId               String
+  code                   String
+  sectionCode            String?
+  sectionName            String?
+  name                   String
+  description            String?           @db.Text
+  guidance               String?           @db.Text
+  maturityCriteria       Json?
+  implementationExamples String?           @db.Text
+  order                  Int
+  domain                 ControlDomain     @relation(fields: [domainId], references: [id])
+  responses              ControlResponse[]
 
   @@unique([domainId, code])
 }

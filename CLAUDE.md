@@ -52,7 +52,7 @@ Phase 7     Polish + E2E tests
 
 | Framework | Version | Controls | Assessment Model |
 |---|---|---|---|
-| NIST CSF | v2.0 | 106 subcategories | Maturity level 1–5; status shown as Not started / In progress / Done (Done = `IMPLEMENTED`, `NOT_APPLICABLE` hidden) |
+| NIST CSF | v2.0 | 106 subcategories | Maturity level 1–5 (Ad-Hoc / Repeatable / Capable / Matured / Industry Best); per-control criteria + implementation examples seeded from `docs/nist-control.xlsx` into `maturityCriteria Json` + `implementationExamples Text` on `Control`; status UI = Not started / In progress / Done |
 | ISO/IEC 27001 | 2022 | 93 (Annex A) | NOT_STARTED / IN_PROGRESS / IMPLEMENTED / NOT_APPLICABLE |
 | PCI DSS | v4.0.1 | 12 requirements + 63 sub-requirements | Same enum as 27001 |
 

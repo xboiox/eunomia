@@ -5,6 +5,8 @@ import { getAuthSession } from "@/lib/auth/session";
 import { hasMinimumTenantRole } from "@/lib/auth/rbac";
 import { prisma } from "@/lib/prisma/client";
 import { ControlResponseForm } from "@/components/assessments/ControlResponseForm";
+import { MaturityTable } from "@/components/assessments/MaturityTable";
+import { ImplementationExamples } from "@/components/assessments/ImplementationExamples";
 import { EvidencePanel } from "@/components/evidence/EvidencePanel";
 
 interface PageProps {
@@ -43,6 +45,13 @@ export default async function ControlResponsePage({ params }: PageProps) {
 
   const isNist = assessment.framework.code === "NIST_CSF";
 
+  // Safe-cast maturityCriteria from Prisma's JsonValue to our typed shape.
+  type MaturityCriteria = { "1": string; "2": string; "3": string; "4": string; "5": string };
+  const maturityCriteria =
+    isNist && control.maturityCriteria != null
+      ? (control.maturityCriteria as MaturityCriteria)
+      : null;
+
   return (
     <div className="p-8">
       <Link
@@ -64,6 +73,17 @@ export default async function ControlResponsePage({ params }: PageProps) {
         <div className="mt-3 max-w-3xl rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-800/50 dark:text-gray-300">
           <span className="font-medium">Guidance: </span>{control.guidance}
         </div>
+      )}
+
+      {maturityCriteria && (
+        <MaturityTable
+          criteria={maturityCriteria}
+          currentLevel={response?.maturityLevel ?? null}
+        />
+      )}
+
+      {isNist && control.implementationExamples && (
+        <ImplementationExamples text={control.implementationExamples} />
       )}
 
       <ControlResponseForm
