@@ -4,14 +4,14 @@ interface NistMaturityTableProps {
   data: NistMaturityTableData;
 }
 
-// Colors per NIST CSF Function, matching the standard visual identity
+// Colors per NIST CSF 2.0 official visual identity
 const DOMAIN_COLORS: Record<string, { bg: string; text: string }> = {
-  GV: { bg: "bg-[#4a7c59]",  text: "text-white" }, // Govern    — dark green
-  ID: { bg: "bg-[#6b7280]",  text: "text-white" }, // Identify  — gray
-  PR: { bg: "bg-[#b5860d]",  text: "text-white" }, // Protect   — olive
-  DE: { bg: "bg-[#c45e2a]",  text: "text-white" }, // Detect    — orange
-  RS: { bg: "bg-[#2b5ea7]",  text: "text-white" }, // Respond   — blue
-  RC: { bg: "bg-[#7c8a96]",  text: "text-white" }, // Recover   — slate
+  GV: { bg: "bg-[#7030A0]", text: "text-white" }, // Govern   — purple
+  ID: { bg: "bg-[#4472C4]", text: "text-white" }, // Identify — blue
+  PR: { bg: "bg-[#70AD47]", text: "text-white" }, // Protect  — green
+  DE: { bg: "bg-[#FFC000]", text: "text-gray-900" }, // Detect — amber (dark text)
+  RS: { bg: "bg-[#C55A11]", text: "text-white" }, // Respond  — orange-red
+  RC: { bg: "bg-[#00B0F0]", text: "text-white" }, // Recover  — sky blue
 };
 
 const DEFAULT_COLOR = { bg: "bg-gray-600", text: "text-white" };
