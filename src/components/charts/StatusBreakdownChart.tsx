@@ -40,8 +40,8 @@ export function StatusBreakdownChart({ counts, isNist = false }: StatusBreakdown
           data={data}
           cx="50%"
           cy="50%"
-          innerRadius={55}
-          outerRadius={85}
+          innerRadius="30%"
+          outerRadius="48%"
           paddingAngle={2}
           dataKey="value"
         >

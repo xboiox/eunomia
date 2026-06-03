@@ -38,6 +38,9 @@ export function DomainProgressChart({ domains, colorMap }: DomainProgressChartPr
   const barColor = (code: string) =>
     colorMap ? (colorMap[code] ?? FALLBACK_COLOR) : FALLBACK_COLOR;
 
+  // Dynamic Y-axis width based on longest domain code (e.g. "Req-12" needs more space than "GV")
+  const yAxisWidth = Math.max(36, Math.max(...domains.map((d) => d.code.length)) * 8 + 8);
+
   return (
     <div>
       <ResponsiveContainer width="100%" height={Math.max(180, domains.length * 32)}>
@@ -60,7 +63,7 @@ export function DomainProgressChart({ domains, colorMap }: DomainProgressChartPr
             dataKey="code"
             interval={0}
             tick={{ fontSize: 11, fontFamily: "monospace" }}
-            width={38}
+            width={yAxisWidth}
             tickLine={false}
             axisLine={false}
           />
