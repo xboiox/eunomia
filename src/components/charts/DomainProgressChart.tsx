@@ -40,11 +40,11 @@ export function DomainProgressChart({ domains, colorMap }: DomainProgressChartPr
 
   return (
     <div>
-      <ResponsiveContainer width="100%" height={Math.max(140, domains.length * 26)}>
+      <ResponsiveContainer width="100%" height={Math.max(180, domains.length * 32)}>
         <BarChart
           data={domains}
           layout="vertical"
-          margin={{ top: 0, right: 32, bottom: 0, left: 0 }}
+          margin={{ top: 4, right: 32, bottom: 4, left: 0 }}
         >
           <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
           <XAxis
@@ -58,6 +58,7 @@ export function DomainProgressChart({ domains, colorMap }: DomainProgressChartPr
           <YAxis
             type="category"
             dataKey="code"
+            interval={0}
             tick={{ fontSize: 11, fontFamily: "monospace" }}
             width={38}
             tickLine={false}
