@@ -19,11 +19,11 @@ const STATUS_OPTIONS_NIST = [
 ];
 
 const MATURITY_LEVELS = [
-  { value: 1, label: "1 — Partial" },
-  { value: 2, label: "2 — Risk Informed" },
-  { value: 3, label: "3 — Repeatable" },
-  { value: 4, label: "4 — Adaptive" },
-  { value: 5, label: "5 — Optimized" },
+  { value: 1, label: "1 — Ad-Hoc" },
+  { value: 2, label: "2 — Repeatable" },
+  { value: 3, label: "3 — Capable" },
+  { value: 4, label: "4 — Matured" },
+  { value: 5, label: "5 — Industry Best" },
 ];
 
 interface InitialState {
