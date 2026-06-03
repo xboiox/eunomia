@@ -135,8 +135,15 @@ src/
 ├── components/
 │   ├── dashboard/
 │   │   └── SidebarNav.tsx     # Client component — active link via usePathname
-│   ├── assessment/            # Phase 4
+│   ├── assessments/           # Phase 4 + post-Phase-5
+│   │   ├── NewAssessmentForm.tsx
+│   │   ├── ControlResponseForm.tsx
+│   │   ├── AssessmentManageBar.tsx
+│   │   ├── AssessmentControls.tsx  # Client — clickable status filter
+│   │   ├── MaturityTable.tsx       # NIST CSF — 5-row criteria table (highlights active level)
+│   │   └── ImplementationExamples.tsx  # NIST CSF — collapsible implementation examples
 │   ├── evidence/              # Phase 5
+│   │   └── EvidencePanel.tsx  # Upload + list + delete
 │   ├── frameworks/            # Phase 3
 │   ├── charts/                # Phase 6
 │   └── ui/                    # Shared primitives (Phase 7)
@@ -292,7 +299,7 @@ Framework (e.g. NIST_CSF v2.0)
 ```
 
 **Assessment response per framework:**
-- NIST CSF: `maturityLevel` (1–5 integer); status presented as Not started / In progress / Done (Done = `IMPLEMENTED`, `NOT_APPLICABLE` hidden)
+- NIST CSF: `maturityLevel` (1–5 integer, labels: Ad-Hoc / Repeatable / Capable / Matured / Industry Best); status UI = Not started / In progress / Done; each control also carries `maturityCriteria Json` (5-level rubric) + `implementationExamples Text` sourced from `docs/nist-control.xlsx`
 - ISO 27001, PCI DSS: `ComplianceStatus` enum (NOT_STARTED / IN_PROGRESS / IMPLEMENTED / NOT_APPLICABLE)
 
 ---

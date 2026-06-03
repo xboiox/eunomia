@@ -186,6 +186,32 @@ To issue a license: INSERT a row into this table via Supabase Dashboard.
 
 ---
 
+## Post-Phase-5 Enhancements (delivered between Phase 5 and Phase 6)
+
+### NIST CSF per-control maturity criteria + implementation examples
+
+**Goal:** Each NIST CSF control shows assessors what "good" looks like at each maturity level, plus implementation guidance from NIST source data.
+
+### Completed
+- [x] `docs/nist-control.xlsx` — source data (106 controls × 5 maturity levels + implementation examples)
+- [x] `prisma/seeds/nist-maturity-data.ts` — auto-generated from Excel; 530 maturity criteria definitions
+- [x] `prisma/schema.prisma`: added `maturityCriteria Json?` + `implementationExamples String? @db.Text` to `Control` model
+- [x] Migration `20260603100000_control_maturity_fields` applied
+- [x] `seedNistCsf()` updated to upsert maturity data from `nist-maturity-data.ts`
+- [x] `MaturityTable` component — 5-row table (Level | Criteria), highlights the assessor's current level
+- [x] `ImplementationExamples` component — collapsed by default; expand shows parsed entries with category/example tags
+
+### Maturity level labels
+| Level | Label |
+|---|---|
+| 1 | Ad-Hoc |
+| 2 | Repeatable |
+| 3 | Capable |
+| 4 | Matured |
+| 5 | Industry Best |
+
+---
+
 ## Phase 6: Dashboard & Charts
 
 **Goal:** Compliance progress visualized per assessment and per tenant.

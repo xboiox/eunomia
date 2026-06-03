@@ -63,8 +63,12 @@ Organizations need to demonstrate compliance with security frameworks (NIST CSF,
 
 ### 5. Control Assessment
 - App displays all controls for the selected framework, organized by domain/category
-- For NIST CSF: assessors assign a maturity level (1–5) per subcategory
-- For other frameworks: assessors assign a status per control
+- For NIST CSF:
+  - Assessors assign a maturity level per subcategory: **1 Ad-Hoc · 2 Repeatable · 3 Capable · 4 Matured · 5 Industry Best**
+  - Each control shows a **Maturity Level Criteria table** (5 rows; active level highlighted)
+  - Each control shows **Implementation Examples** (collapsible, sourced from `docs/nist-control.xlsx`)
+  - Status displayed as: Not started / In progress / Done
+- For other frameworks: assessors assign a status per control (Not Started / In Progress / Implemented / Not Applicable)
 - Optional per-control deadline
 - Notes field per control
 

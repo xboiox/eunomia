@@ -172,17 +172,19 @@ model ControlDomain {
 // ISO 27001: Control (e.g. 5.1)
 // PCI DSS: Sub-requirement (e.g. 1.1.1)
 model Control {
-  id           String          @id @default(cuid())
-  domainId     String
-  code         String          // e.g. "GV.OC-01", "5.1", "1.1.1"
-  sectionCode  String?         // Mid-level grouping code (NIST CSF Category)
-  sectionName  String?         // Mid-level grouping name
-  name         String
-  description  String?         @db.Text
-  guidance     String?         @db.Text
-  order        Int
-  domain       ControlDomain   @relation(fields: [domainId], references: [id])
-  responses    ControlResponse[]
+  id                     String            @id @default(cuid())
+  domainId               String
+  code                   String            // e.g. "GV.OC-01", "5.1", "1.1.1"
+  sectionCode            String?           // Mid-level grouping code (NIST CSF Category)
+  sectionName            String?           // Mid-level grouping name
+  name                   String
+  description            String?           @db.Text
+  guidance               String?           @db.Text // ISO 27002 implementation guidance (ISO 27001 only)
+  maturityCriteria       Json?             // NIST CSF only — {"1":"Ad-Hoc desc","2":"Repeatable desc",...,"5":"Industry Best desc"}
+  implementationExamples String?           @db.Text // NIST CSF only — raw text from NIST source, parsed in UI
+  order                  Int
+  domain                 ControlDomain     @relation(fields: [domainId], references: [id])
+  responses              ControlResponse[]
   @@unique([domainId, code])
 }
 
@@ -291,12 +293,14 @@ Tenants are deactivated rather than deleted to preserve assessment history.
 ## Seed Data Structure
 
 Framework seed order:
-1. `Framework` records (4 records)
+1. `Framework` records (3 records)
 2. `ControlDomain` records per framework
-3. `Control` records per domain
+3. `Control` records per domain (NIST CSF also seeds `maturityCriteria` + `implementationExamples`)
 
 Seed files location: `prisma/seeds/`
-- `framework-nist-csf.ts` — NIST CSF v2.0 (6 functions, ~106 subcategories)
-- `framework-iso-27001.ts` — ISO 27001:2022 (4 themes, 93 controls)
-  (ISO 27002 guidance is folded into the ISO 27001 controls, not a separate framework)
-- `framework-pci-dss.ts` — PCI DSS v4.0.1 (12 requirements + sub-requirements)
+- `framework-nist-csf.ts` — NIST CSF v2.0 (6 functions, 106 subcategories); reads maturity data from `nist-maturity-data.ts`
+- `nist-maturity-data.ts` — auto-generated from `docs/nist-control.xlsx`; 106 × 5-level maturity criteria + implementation examples
+- `framework-iso-27001.ts` — ISO 27001:2022 (4 themes, 93 controls + ISO 27002 guidance via `GUIDANCE_ADDITIONS`)
+- `framework-pci-dss.ts` — PCI DSS v4.0.1 (12 requirements, 63 sub-requirements)
+
+Total: **3 frameworks · 22 domains · 262 controls**

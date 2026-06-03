@@ -163,10 +163,12 @@ EMAIL_FROM=
 ### Frameworks (Phase 3)
 | File | Purpose |
 |---|---|
-| `prisma/seeds/framework-nist-csf.ts` | NIST CSF v2.0 data + `seedNistCsf()` (6 domains, 106 subcategories) |
+| `prisma/seeds/framework-nist-csf.ts` | NIST CSF v2.0 data + `seedNistCsf()` (6 domains, 106 subcategories); seeds maturity data from `nist-maturity-data.ts` |
+| `prisma/seeds/nist-maturity-data.ts` | **Auto-generated** from `docs/nist-control.xlsx` — 106 × 5 maturity criteria + 106 implementation examples; do not edit manually |
+| `docs/nist-control.xlsx` | Source Excel for NIST maturity data (SubCategory, Level 1–5, Implementation Examples) |
 | `prisma/seeds/framework-iso-27001.ts` | ISO 27001:2022 data + `seedIso27001()` (4 themes, 93 controls) + `GUIDANCE_ADDITIONS` (ex-ISO 27002 guidance) |
 | `prisma/seeds/framework-pci-dss.ts` | PCI DSS v4.0.1 data + `seedPciDss()` (12 requirements, 63 sub-reqs) |
-| `prisma/seed.ts` | Orchestrator — runs all 4 seeds (idempotent); `npm run db:seed` |
+| `prisma/seed.ts` | Orchestrator — runs all 3 seeds (idempotent); `npm run db:seed` |
 | `src/app/api/frameworks/route.ts` | GET frameworks list with domain/control counts |
 | `src/app/api/frameworks/[frameworkId]/domains/route.ts` | GET domain → control tree |
 | `src/app/dashboard/frameworks/page.tsx` | Framework cards |
@@ -183,6 +185,8 @@ EMAIL_FROM=
 | `src/app/dashboard/assessments/new/page.tsx` + `components/assessments/NewAssessmentForm.tsx` | Create form |
 | `src/app/dashboard/assessments/[assessmentId]/page.tsx` + `components/assessments/AssessmentControls.tsx` | Overview + clickable status filter + controls grouped by domain |
 | `src/app/dashboard/assessments/[assessmentId]/controls/[controlId]/page.tsx` + `components/assessments/ControlResponseForm.tsx` | Response form (maturity for NIST, status otherwise) |
+| `src/components/assessments/MaturityTable.tsx` | NIST only — 5-row criteria table, highlights assessor's current level |
+| `src/components/assessments/ImplementationExamples.tsx` | NIST only — collapsible implementation examples with parsed tags |
 
 ### Evidence (Phase 5)
 | File | Purpose |
