@@ -16,6 +16,7 @@ import { NistMaturityTable } from "@/components/assessments/NistMaturityTable";
 import { StatusBreakdownChart } from "@/components/charts/StatusBreakdownChart";
 import { DomainProgressChart } from "@/components/charts/DomainProgressChart";
 import { NIST_DOMAIN_COLORS } from "@/lib/utils/nist-colors";
+import { ISO_27001_DOMAIN_COLORS, PCI_DSS_DOMAIN_COLORS } from "@/lib/utils/framework-colors";
 import { MaturityRadarChart } from "@/components/charts/MaturityRadarChart";
 
 interface PageProps {
@@ -111,10 +112,16 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
 
   const { total, done, pct } = calculateCompletion(responsesForCalc);
 
-  // NIST: extract hex colors keyed by domain code for DomainProgressChart
-  const nistBarColorMap = isNist
-    ? Object.fromEntries(Object.entries(NIST_DOMAIN_COLORS).map(([k, v]) => [k, v.bg]))
-    : undefined;
+  // Build domain color map for DomainProgressChart based on framework
+  const frameworkCode = assessment.framework.code;
+  const domainColorMap: Record<string, string> = (() => {
+    if (frameworkCode === "NIST_CSF") {
+      return Object.fromEntries(Object.entries(NIST_DOMAIN_COLORS).map(([k, v]) => [k, v.bg]));
+    }
+    if (frameworkCode === "ISO_27001") return ISO_27001_DOMAIN_COLORS;
+    if (frameworkCode === "PCI_DSS") return PCI_DSS_DOMAIN_COLORS;
+    return {};
+  })();
 
   return (
     <div className="p-8">
@@ -170,7 +177,7 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
               Completion by Function
             </h2>
             <div className="mt-3">
-              <DomainProgressChart domains={domainProgress} colorMap={nistBarColorMap} />
+              <DomainProgressChart domains={domainProgress} colorMap={domainColorMap} />
             </div>
           </div>
         </div>
@@ -202,7 +209,7 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
               Completion by Domain
             </h2>
             <div className="mt-3">
-              <DomainProgressChart domains={domainProgress} colorMap={nistBarColorMap} />
+              <DomainProgressChart domains={domainProgress} colorMap={domainColorMap} />
             </div>
           </div>
         </div>
