@@ -108,6 +108,18 @@ insert into license_keys (key, max_tenants, license_type, customer_name)
 values ('EUNOMIA-DEV-0001', 5, 'standard', 'Internal Testing');
 ```
 
+**License expiry** is controlled by the nullable `expires_at` column: leave it `NULL` for a
+perpetual license (never expires), or set a timestamp for a fixed-term license.
+
+```sql
+update license_keys set expires_at = null where key = 'EUNOMIA-DEV-0001';                    -- perpetual
+update license_keys set expires_at = now() + interval '1 year' where key = 'EUNOMIA-DEV-0001'; -- 1-year term
+```
+
+> If an older `license_keys` table is missing the column, add it with
+> `alter table license_keys add column if not exists expires_at timestamptz;`. The app also
+> degrades gracefully (treats licenses as perpetual) if the column is absent.
+
 Then, in **Project Settings**:
 - **Data API → Project URL** → put in `SUPABASE_URL`
 - **API Keys → `service_role`** (the secret one, *not* `anon`) → put in `SUPABASE_SERVICE_ROLE_KEY`

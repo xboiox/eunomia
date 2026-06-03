@@ -239,11 +239,11 @@ npm run test:run    # single run
 npm run test:coverage  # with coverage report
 ```
 
-Current: **145 tests, 14 test files, all passing** (CI: Node 24, lint + typecheck + test on every push)
+Current: **146 tests, 14 test files, all passing** (CI: Node 24, lint + typecheck + test on every push)
 Coverage: statements 82%, functions 90%, lines 85%, branches 75% (threshold: 80/80/80/70)
 
 Test files:
-- `src/lib/license/__tests__/` — validate, cookie, check (incl. `getLicenseStatus`, 24 tests)
+- `src/lib/license/__tests__/` — validate (incl. missing-`expires_at` fallback), cookie, check (incl. `getLicenseStatus`, 25 tests)
 - `src/lib/auth/__tests__/rbac.test.ts` — RBAC helpers (12 tests)
 - `src/lib/evidence/__tests__/` — validate + storage (15 tests)
 - `src/lib/utils/__tests__/compliance.test.ts` — compliance calculations (13 tests)
@@ -273,6 +273,31 @@ create table license_keys (
 
 To issue a license: INSERT a row via Supabase Dashboard.  
 App authenticates via `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (server-side only).
+
+### License expiry (`expires_at`)
+
+`expires_at` is **nullable** and drives whether a license expires:
+
+| `expires_at` | Behaviour |
+|---|---|
+| `NULL` | **Perpetual** — never expires (shown as "Expires: Never" in Settings) |
+| future timestamp | Valid until that moment (Settings shows "in N days"; amber warning ≤ 30 days) |
+| past timestamp | Expired → activation/refresh rejected with "This license key has expired." |
+
+If your `license_keys` table predates this column, add it (idempotent):
+
+```sql
+alter table license_keys add column if not exists expires_at timestamptz;
+```
+
+> `validate.ts` is resilient: if the column is absent, it logs a warning and falls back to treating every license as perpetual instead of failing.
+
+Set expiry per key:
+
+```sql
+update license_keys set expires_at = null where key = 'KEY';                    -- perpetual
+update license_keys set expires_at = now() + interval '1 year' where key = 'KEY'; -- 1-year term
+```
 
 ---
 

@@ -3,12 +3,26 @@ import { getAuthSession } from "@/lib/auth/session";
 import { getLicenseStatus } from "@/lib/license/check";
 import { ChangeLicenseKeyForm } from "@/components/dashboard/ChangeLicenseKeyForm";
 
+const EXPIRY_WARNING_DAYS = 30;
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
 function formatDate(date: Date | null): string {
   return date ? date.toLocaleDateString() : "—";
 }
 
 function formatDateTime(date: Date | null): string {
   return date ? date.toLocaleString() : "—";
+}
+
+function daysUntil(date: Date): number {
+  return Math.ceil((date.getTime() - Date.now()) / MS_PER_DAY);
+}
+
+function expiryRelativeLabel(date: Date): string {
+  const days = daysUntil(date);
+  if (days < 0) return `expired ${Math.abs(days)} day${Math.abs(days) === 1 ? "" : "s"} ago`;
+  if (days === 0) return "expires today";
+  return `in ${days} day${days === 1 ? "" : "s"}`;
 }
 
 export default async function SettingsPage() {
@@ -22,6 +36,13 @@ export default async function SettingsPage() {
     : license.isExpired
       ? { label: "Expired", className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" }
       : { label: "Active", className: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" };
+
+  // Warn when an active license is within the expiry window (and not perpetual).
+  const expiringSoon =
+    license?.activated &&
+    !license.isExpired &&
+    license.expiresAt !== null &&
+    daysUntil(license.expiresAt) <= EXPIRY_WARNING_DAYS;
 
   return (
     <div className="p-8">
@@ -73,8 +94,25 @@ export default async function SettingsPage() {
               </div>
               <div className="flex justify-between text-sm">
                 <dt className="text-gray-500 dark:text-gray-400">Expires</dt>
-                <dd className="font-medium text-gray-900 dark:text-white">
-                  {license.expiresAt ? formatDate(license.expiresAt) : "Never"}
+                <dd className="text-right font-medium text-gray-900 dark:text-white">
+                  {license.expiresAt ? (
+                    <>
+                      {formatDate(license.expiresAt)}
+                      <span
+                        className={`ml-1 font-normal ${
+                          license.isExpired
+                            ? "text-red-600 dark:text-red-400"
+                            : expiringSoon
+                              ? "text-amber-600 dark:text-amber-400"
+                              : "text-gray-500 dark:text-gray-400"
+                        }`}
+                      >
+                        ({expiryRelativeLabel(license.expiresAt)})
+                      </span>
+                    </>
+                  ) : (
+                    "Never"
+                  )}
                 </dd>
               </div>
               <div className="flex justify-between text-sm">
@@ -84,6 +122,13 @@ export default async function SettingsPage() {
                 </dd>
               </div>
             </dl>
+
+            {expiringSoon && license.expiresAt && (
+              <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+                This license expires {expiryRelativeLabel(license.expiresAt)}. Renew it on the
+                license server to avoid losing access.
+              </div>
+            )}
 
             <ChangeLicenseKeyForm />
           </section>

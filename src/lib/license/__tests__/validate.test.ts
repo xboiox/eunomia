@@ -91,6 +91,33 @@ describe("validateLicenseKey", () => {
     expect(result.reason).toBe("server_unreachable");
   });
 
+  it("falls back to perpetual when the expires_at column is missing", async () => {
+    mockFetch.mockClear(); // shared mock — count only this test's calls
+    // First call (full select) fails with PostgREST undefined-column error…
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({
+        code: "42703",
+        message: 'column license_keys.expires_at does not exist',
+      }),
+    } as Response);
+    // …second call (fallback select without expires_at) succeeds.
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => [{ max_tenants: 3, license_type: "standard", is_active: true }],
+    } as Response);
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const { validateLicenseKey } = await import("../validate");
+    const result = await validateLicenseKey("LEGACY-KEY");
+
+    expect(result.valid).toBe(true);
+    expect(result.maxTenants).toBe(3);
+    expect(result.expiresAt).toBeNull();
+    expect(warnSpy).toHaveBeenCalledOnce();
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  });
+
   it("returns valid:false with reason server_unreachable on a non-ok HTTP response", async () => {
     // Supabase error responses return an object, not an array.
     mockSupabaseResponse({ message: "permission denied" } as never, false);
