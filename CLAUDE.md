@@ -200,13 +200,16 @@ EMAIL_FROM=
 ### Dashboard & Charts (Phase 6)
 | File | Purpose |
 |---|---|
-| `src/lib/utils/compliance.ts` | `calculateCompletion`, `groupByStatus`, `calculateNistMaturityByDomain`, `getUpcomingDeadlines` |
-| `src/components/charts/StatusBreakdownChart.tsx` | Recharts donut (PieChart) — status distribution |
-| `src/components/charts/DomainProgressChart.tsx` | Recharts horizontal bar — completion % per domain |
-| `src/components/charts/MaturityRadarChart.tsx` | Recharts RadarChart — avg maturity per NIST Function (NIST only) |
+| `src/lib/utils/compliance.ts` | `calculateCompletion`, `groupByStatus`, `calculateNistMaturityByDomain`, `calculateNistMaturityTable`, `getUpcomingDeadlines` |
+| `src/lib/utils/nist-colors.ts` | NIST CSF 2.0 official color palette (`NIST_DOMAIN_COLORS`) — shared by table + chart |
+| `src/lib/utils/framework-colors.ts` | ISO 27001 (4 colors) + PCI DSS (12-color blue→green gradient) |
+| `src/components/charts/StatusBreakdownChart.tsx` | Recharts donut (PieChart) — status distribution; non-NIST only |
+| `src/components/charts/DomainProgressChart.tsx` | Recharts horizontal bar — completion % per domain; dynamic Y-axis width + color legend |
+| `src/components/charts/MaturityRadarChart.tsx` | Recharts RadarChart — avg maturity per NIST Function; scale 1–5 |
+| `src/components/assessments/NistMaturityTable.tsx` | NIST maturity table: section rows → domain avg → overall score; NIST 2.0 colors |
 | `src/components/dashboard/StatsCards.tsx` | Summary stat cards (server component) |
-| `src/components/dashboard/DeadlineList.tsx` | Upcoming deadlines ≤30 days, links to control page |
-| `src/app/dashboard/page.tsx` | Overview: stats, recent assessments, deadlines |
+| `src/components/dashboard/DeadlineList.tsx` | Upcoming deadlines ≤30 days, urgency color coding, links to control page |
+| `src/app/dashboard/page.tsx` | Overview: stats, recent assessments (mini bar), deadlines |
 | `src/app/dashboard/settings/page.tsx` | Settings page (account info + placeholder) |
 
 ### Infrastructure
@@ -227,7 +230,8 @@ npm run test:run    # single run
 npm run test:coverage  # with coverage report
 ```
 
-Current: **131 tests, 13 test files, all passing** (CI runs lint + typecheck + test on every push)
+Current: **135 tests, 13 test files, all passing** (CI: Node 24, lint + typecheck + test on every push)
+Coverage: statements 82%, functions 90%, lines 85%, branches 75% (threshold: 80/80/80/70)
 
 Test files:
 - `src/lib/license/__tests__/` — validate, cookie, check (20 tests)

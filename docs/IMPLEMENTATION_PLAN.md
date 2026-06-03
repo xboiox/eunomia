@@ -217,20 +217,30 @@ To issue a license: INSERT a row into this table via Supabase Dashboard.
 **Goal:** Compliance progress visualized per assessment and per tenant.
 
 ### Tasks
-- [x] `src/lib/utils/compliance.ts`: `calculateCompletion`, `groupByStatus`, `calculateNistMaturityByDomain`, `getUpcomingDeadlines` (13 tests)
-- [x] `src/components/charts/StatusBreakdownChart.tsx` — Recharts donut; NIST uses 3-status labels
-- [x] `src/components/charts/DomainProgressChart.tsx` — Recharts horizontal bar; color-coded by pct
-- [x] `src/components/charts/MaturityRadarChart.tsx` — Recharts RadarChart; avg maturity per Function; scale 1–5
-- [x] `src/components/dashboard/StatsCards.tsx` — summary cards (total, active, avg %, deadlines)
+- [x] `src/lib/utils/compliance.ts`: `calculateCompletion`, `groupByStatus`, `calculateNistMaturityByDomain`, `calculateNistMaturityTable`, `getUpcomingDeadlines` (17 tests)
+- [x] `src/lib/utils/nist-colors.ts` — NIST CSF 2.0 official palette (6 Functions)
+- [x] `src/lib/utils/framework-colors.ts` — ISO 27001 (4 colors) + PCI DSS (12-color gradient)
+- [x] `src/components/charts/StatusBreakdownChart.tsx` — Recharts donut; non-NIST only
+- [x] `src/components/charts/DomainProgressChart.tsx` — Recharts horizontal bar; dynamic Y-axis width; domain-specific colors + legend for all frameworks
+- [x] `src/components/charts/MaturityRadarChart.tsx` — Recharts RadarChart; avg maturity per NIST Function; title = "Overall Maturity Score: X.X"
+- [x] `src/components/assessments/NistMaturityTable.tsx` — section rows per domain, domain avg row, overall score; NIST CSF 2.0 colors
+- [x] `src/components/dashboard/StatsCards.tsx` — summary cards
 - [x] `src/components/dashboard/DeadlineList.tsx` — upcoming deadlines ≤30 days; urgency color coding
-- [x] `src/app/dashboard/page.tsx`: overview with stats, recent assessments (mini progress), deadlines
-- [x] Assessment detail (`[assessmentId]/page.tsx`): status donut + radar (NIST) or domain bar, plus domain bar for NIST
-- [x] `src/app/dashboard/settings/page.tsx`: settings page (account info + placeholder)
+- [x] `src/app/dashboard/page.tsx`: overview with stats, recent assessments (mini bar), deadlines
+- [x] Assessment detail NIST: radar + completion bar + NistMaturityTable (no status donut)
+- [x] Assessment detail non-NIST: status donut + domain bar with legend
+- [x] `src/app/dashboard/settings/page.tsx`: settings page
 
 ### Acceptance criteria
-- [x] Correct % calculated from real data (pure utility functions, fully tested)
-- [x] NIST CSF shows RadarChart of avg maturity per Function
+- [x] Correct % calculated from real data (pure utility, 17 tests)
+- [x] NIST: RadarChart + NistMaturityTable (section-level, domain avg, overall score)
+- [x] All frameworks: domain-specific colors + legend on DomainProgressChart
 - [x] Deadline list shows controls due ≤30 days
+
+### Notes
+- NIST colors centralized in `nist-colors.ts`, shared by `NistMaturityTable` + `DomainProgressChart`
+- `DomainProgressChart.colorMap` prop drives both color and legend visibility
+- CI updated to Node 24 (Node 20 deprecated June 16, 2026)
 
 ---
 

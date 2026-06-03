@@ -57,7 +57,7 @@ export default async function DashboardPage() {
     return getUpcomingDeadlines(deadlineResponses, 30).map((d) => ({
       ...d,
       assessmentId: assessment.id,
-      controlId: assessment.responses.find((r) => r.control.code === d.controlCode)!.controlId,
+      controlId: assessment.responses.find((r) => r.control.code === d.controlCode)?.controlId ?? "",
       assessmentName: assessment.name,
       daysLeft: Math.max(0, Math.ceil((d.deadline.getTime() - Date.now()) / (1000 * 60 * 60 * 24))),
     }));
