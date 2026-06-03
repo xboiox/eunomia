@@ -212,26 +212,25 @@ To issue a license: INSERT a row into this table via Supabase Dashboard.
 
 ---
 
-## Phase 6: Dashboard & Charts
+## Phase 6: Dashboard & Charts ✅ COMPLETED
 
 **Goal:** Compliance progress visualized per assessment and per tenant.
 
 ### Tasks
-- [ ] `src/lib/utils/compliance.ts`: completion %, status breakdown, upcoming deadlines
-- [ ] `src/components/charts/ComplianceDonutChart.tsx`
-- [ ] `src/components/charts/DomainProgressChart.tsx`
-- [ ] `src/components/charts/StatusBreakdownChart.tsx`
-- [ ] `src/components/charts/MaturityRadarChart.tsx` (NIST CSF only)
-- [ ] `src/components/dashboard/StatsCards.tsx`
-- [ ] `src/components/dashboard/DeadlineList.tsx`
-- [ ] `src/app/(dashboard)/page.tsx`: tenant overview
-- [ ] `src/app/(dashboard)/assessments/[assessmentId]/page.tsx`: full dashboard
-- [ ] Tests: compliance calculation functions
+- [x] `src/lib/utils/compliance.ts`: `calculateCompletion`, `groupByStatus`, `calculateNistMaturityByDomain`, `getUpcomingDeadlines` (13 tests)
+- [x] `src/components/charts/StatusBreakdownChart.tsx` — Recharts donut; NIST uses 3-status labels
+- [x] `src/components/charts/DomainProgressChart.tsx` — Recharts horizontal bar; color-coded by pct
+- [x] `src/components/charts/MaturityRadarChart.tsx` — Recharts RadarChart; avg maturity per Function; scale 1–5
+- [x] `src/components/dashboard/StatsCards.tsx` — summary cards (total, active, avg %, deadlines)
+- [x] `src/components/dashboard/DeadlineList.tsx` — upcoming deadlines ≤30 days; urgency color coding
+- [x] `src/app/dashboard/page.tsx`: overview with stats, recent assessments (mini progress), deadlines
+- [x] Assessment detail (`[assessmentId]/page.tsx`): status donut + radar (NIST) or domain bar, plus domain bar for NIST
+- [x] `src/app/dashboard/settings/page.tsx`: settings page (account info + placeholder)
 
 ### Acceptance criteria
-- Correct % calculated from real data
-- NIST CSF shows RadarChart of avg maturity per Function
-- Deadline list shows controls due ≤30 days
+- [x] Correct % calculated from real data (pure utility functions, fully tested)
+- [x] NIST CSF shows RadarChart of avg maturity per Function
+- [x] Deadline list shows controls due ≤30 days
 
 ---
 

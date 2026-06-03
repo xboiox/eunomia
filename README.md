@@ -118,11 +118,13 @@ Then, in **Project Settings**:
 
 ```bash
 npm run db:generate   # generate the Prisma client
-npm run db:migrate    # create all tables (prisma migrate dev)
+npm run db:migrate    # create all tables (prisma migrate dev — development only)
 npm run db:seed        # load the 3 frameworks (262 controls)
 ```
 
 A successful seed prints: `Done. 3 frameworks, 22 domains, 262 controls.`
+
+> **Production deployment:** use `npx prisma migrate deploy` instead of `migrate dev`. The `migrate dev` command is interactive and intended for local development only.
 
 ### 6. Run the app
 

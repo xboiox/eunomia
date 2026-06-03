@@ -4,8 +4,16 @@ import { notFound, redirect } from "next/navigation";
 import { getAuthSession } from "@/lib/auth/session";
 import { hasMinimumTenantRole } from "@/lib/auth/rbac";
 import { prisma } from "@/lib/prisma/client";
+import {
+  calculateCompletion,
+  calculateNistMaturityByDomain,
+  groupByStatus,
+} from "@/lib/utils/compliance";
 import { AssessmentManageBar } from "@/components/assessments/AssessmentManageBar";
 import { AssessmentControls } from "@/components/assessments/AssessmentControls";
+import { StatusBreakdownChart } from "@/components/charts/StatusBreakdownChart";
+import { DomainProgressChart } from "@/components/charts/DomainProgressChart";
+import { MaturityRadarChart } from "@/components/charts/MaturityRadarChart";
 
 interface PageProps {
   params: Promise<{ assessmentId: string }>;
@@ -45,7 +53,40 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
 
   const isNist = assessment.framework.code === "NIST_CSF";
 
-  // Map to the plain serializable shape the client component expects.
+  // Compliance data for charts (computed server-side, passed as plain values)
+  const responsesForCalc = responses.map((r) => ({
+    status: r.status,
+    maturityLevel: r.maturityLevel,
+    deadline: r.deadline,
+    domain: r.control.domain,
+    controlCode: r.control.code,
+    controlName: r.control.name,
+  }));
+
+  const statusCounts = groupByStatus(responsesForCalc);
+
+  // Per-domain completion % for bar chart
+  const domainMap = new Map<string, { name: string; order: number; done: number; total: number }>();
+  for (const r of responses) {
+    const key = r.control.domain.code;
+    if (!domainMap.has(key)) {
+      domainMap.set(key, { name: r.control.domain.name, order: r.control.domain.order, done: 0, total: 0 });
+    }
+    const d = domainMap.get(key)!;
+    d.total++;
+    if (r.status === "IMPLEMENTED" || r.status === "NOT_APPLICABLE") d.done++;
+  }
+  const domainProgress = Array.from(domainMap.entries())
+    .map(([code, d]) => ({
+      code,
+      name: d.name,
+      pct: d.total > 0 ? Math.round((d.done / d.total) * 100) : 0,
+    }))
+    .sort((a, b) => (domainMap.get(a.code)?.order ?? 0) - (domainMap.get(b.code)?.order ?? 0));
+
+  const nistDomainMaturity = isNist ? calculateNistMaturityByDomain(responsesForCalc) : [];
+
+  // Map to client component shape
   const rows = responses.map((r) => ({
     id: r.id,
     controlId: r.controlId,
@@ -59,6 +100,8 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
       domain: r.control.domain,
     },
   }));
+
+  const { total, done, pct } = calculateCompletion(responsesForCalc);
 
   return (
     <div className="p-8">
@@ -91,6 +134,56 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
         />
       )}
 
+      {/* ── Charts ────────────────────────────────────────────── */}
+      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+        {/* Status breakdown donut */}
+        <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Status Breakdown</h2>
+            <span className="text-lg font-bold text-gray-900 dark:text-white">
+              {pct}%{" "}
+              <span className="text-xs font-normal text-gray-400">({done}/{total})</span>
+            </span>
+          </div>
+          <StatusBreakdownChart counts={statusCounts} isNist={isNist} />
+        </div>
+
+        {/* NIST radar OR domain progress */}
+        {isNist ? (
+          <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+              Avg Maturity by Function
+            </h2>
+            <p className="mt-0.5 text-xs text-gray-400">
+              Scale 1 (Ad-Hoc) → 5 (Industry Best)
+            </p>
+            <MaturityRadarChart domains={nistDomainMaturity} />
+          </div>
+        ) : (
+          <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+              Completion by Domain
+            </h2>
+            <div className="mt-3">
+              <DomainProgressChart domains={domainProgress} />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Domain progress bar for NIST (in addition to radar) */}
+      {isNist && (
+        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
+            Completion by Function
+          </h2>
+          <div className="mt-3">
+            <DomainProgressChart domains={domainProgress} />
+          </div>
+        </div>
+      )}
+
+      {/* Controls list with clickable filter */}
       <AssessmentControls assessmentId={assessmentId} isNist={isNist} responses={rows} />
     </div>
   );

@@ -15,7 +15,7 @@ Built on top of the **Play Next.js** SaaS boilerplate.
 
 ## Current Status
 
-**Phase 5 ✅ Complete — Phase 6 (Dashboard + Recharts) is next.**
+**Phase 6 ✅ Complete — Phase 7 (Polish + E2E) is next.**
 
 ```
 Phase 0 ✅  Setup & cleanup
@@ -24,8 +24,8 @@ Phase 2 ✅  Auth + multi-tenancy + RBAC + dashboard shell
 Phase 3 ✅  Framework seed data + browser UI (3 frameworks, 22 domains, 262 controls)
 Phase 4 ✅  Assessment management + collaborative control responses
 Phase 5 ✅  Evidence upload/download/delete (local filesystem)
-Phase 6 ←   Dashboard + Recharts
-Phase 7     Polish + E2E tests
+Phase 6 ✅  Dashboard + Recharts (overview, status donut, domain bar, NIST radar)
+Phase 7 ←   Polish + E2E tests
 ```
 
 ---
@@ -197,6 +197,18 @@ EMAIL_FROM=
 | `src/app/api/evidence/[evidenceId]/route.ts` | GET (auth-gated file stream) + DELETE |
 | `src/components/evidence/EvidencePanel.tsx` | Upload + list + delete, wired into the control response page |
 
+### Dashboard & Charts (Phase 6)
+| File | Purpose |
+|---|---|
+| `src/lib/utils/compliance.ts` | `calculateCompletion`, `groupByStatus`, `calculateNistMaturityByDomain`, `getUpcomingDeadlines` |
+| `src/components/charts/StatusBreakdownChart.tsx` | Recharts donut (PieChart) — status distribution |
+| `src/components/charts/DomainProgressChart.tsx` | Recharts horizontal bar — completion % per domain |
+| `src/components/charts/MaturityRadarChart.tsx` | Recharts RadarChart — avg maturity per NIST Function (NIST only) |
+| `src/components/dashboard/StatsCards.tsx` | Summary stat cards (server component) |
+| `src/components/dashboard/DeadlineList.tsx` | Upcoming deadlines ≤30 days, links to control page |
+| `src/app/dashboard/page.tsx` | Overview: stats, recent assessments, deadlines |
+| `src/app/dashboard/settings/page.tsx` | Settings page (account info + placeholder) |
+
 ### Infrastructure
 | File | Purpose |
 |---|---|
@@ -215,12 +227,13 @@ npm run test:run    # single run
 npm run test:coverage  # with coverage report
 ```
 
-Current: **118 tests, 12 test files, all passing** (CI runs lint + typecheck + test on every push)
+Current: **131 tests, 13 test files, all passing** (CI runs lint + typecheck + test on every push)
 
 Test files:
 - `src/lib/license/__tests__/` — validate, cookie, check (20 tests)
 - `src/lib/auth/__tests__/rbac.test.ts` — RBAC helpers (12 tests)
 - `src/lib/evidence/__tests__/` — validate + storage (15 tests)
+- `src/lib/utils/__tests__/compliance.test.ts` — compliance calculations (13 tests)
 - `src/app/api/tenants/__tests__/route.test.ts` — tenant API (5 tests)
 - `src/app/api/users/__tests__/route.test.ts` — user API (6 tests)
 - `src/app/api/frameworks/__tests__/route.test.ts` — framework API (5 tests)
