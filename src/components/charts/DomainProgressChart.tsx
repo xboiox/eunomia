@@ -19,15 +19,17 @@ interface DomainData {
 
 interface DomainProgressChartProps {
   domains: DomainData[];
+  /** Optional map of domain code → hex color. When provided, overrides the default pct-based coloring. */
+  colorMap?: Record<string, string>;
 }
 
-function barColor(pct: number): string {
+function defaultBarColor(pct: number): string {
   if (pct >= 80) return "#22c55e";
   if (pct >= 40) return "#3b82f6";
   return "#d1d5db";
 }
 
-export function DomainProgressChart({ domains }: DomainProgressChartProps) {
+export function DomainProgressChart({ domains, colorMap }: DomainProgressChartProps) {
   if (domains.length === 0) return null;
 
   return (
@@ -63,7 +65,10 @@ export function DomainProgressChart({ domains }: DomainProgressChartProps) {
         />
         <Bar dataKey="pct" radius={[0, 4, 4, 0]} maxBarSize={20}>
           {domains.map((d, i) => (
-            <Cell key={i} fill={barColor(d.pct)} />
+            <Cell
+              key={i}
+              fill={colorMap ? (colorMap[d.code] ?? defaultBarColor(d.pct)) : defaultBarColor(d.pct)}
+            />
           ))}
         </Bar>
       </BarChart>

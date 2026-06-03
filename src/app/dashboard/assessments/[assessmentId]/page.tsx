@@ -15,6 +15,7 @@ import { AssessmentControls } from "@/components/assessments/AssessmentControls"
 import { NistMaturityTable } from "@/components/assessments/NistMaturityTable";
 import { StatusBreakdownChart } from "@/components/charts/StatusBreakdownChart";
 import { DomainProgressChart } from "@/components/charts/DomainProgressChart";
+import { NIST_DOMAIN_COLORS } from "@/lib/utils/nist-colors";
 import { MaturityRadarChart } from "@/components/charts/MaturityRadarChart";
 
 interface PageProps {
@@ -110,6 +111,11 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
 
   const { total, done, pct } = calculateCompletion(responsesForCalc);
 
+  // NIST: extract hex colors keyed by domain code for DomainProgressChart
+  const nistBarColorMap = isNist
+    ? Object.fromEntries(Object.entries(NIST_DOMAIN_COLORS).map(([k, v]) => [k, v.bg]))
+    : undefined;
+
   return (
     <div className="p-8">
       <Link href="/dashboard/assessments" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
@@ -164,7 +170,7 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
               Completion by Function
             </h2>
             <div className="mt-3">
-              <DomainProgressChart domains={domainProgress} />
+              <DomainProgressChart domains={domainProgress} colorMap={nistBarColorMap} />
             </div>
           </div>
         </div>
@@ -196,7 +202,7 @@ export default async function AssessmentDetailPage({ params }: PageProps) {
               Completion by Domain
             </h2>
             <div className="mt-3">
-              <DomainProgressChart domains={domainProgress} />
+              <DomainProgressChart domains={domainProgress} colorMap={nistBarColorMap} />
             </div>
           </div>
         </div>
