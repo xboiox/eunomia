@@ -34,14 +34,14 @@ export function StatusBreakdownChart({ counts, isNist = false }: StatusBreakdown
   if (data.length === 0) return null;
 
   return (
-    <ResponsiveContainer width="100%" height={220}>
+    <ResponsiveContainer width="100%" height={260}>
       <PieChart>
         <Pie
           data={data}
           cx="50%"
           cy="50%"
-          innerRadius="30%"
-          outerRadius="48%"
+          innerRadius={70}
+          outerRadius={110}
           paddingAngle={2}
           dataKey="value"
         >
