@@ -12,9 +12,23 @@ import { type NextRequest, NextResponse } from "next/server";
 // The activation page lives in the (setup) route group, so its URL is /activate
 const SETUP_PATH = "/activate";
 
+function safeRedirectTarget(from: string | null, requestUrl: string): URL {
+  const appOrigin = new URL(requestUrl).origin;
+  try {
+    const candidate = new URL(from ?? "/", requestUrl);
+    // Only allow same-origin redirects — reject any external URL.
+    if (candidate.origin !== appOrigin) return new URL("/", requestUrl);
+    return candidate;
+  } catch {
+    return new URL("/", requestUrl);
+  }
+}
+
 export async function GET(request: NextRequest) {
-  const from = request.nextUrl.searchParams.get("from") ?? "/";
-  const redirectTarget = new URL(from, request.url);
+  const redirectTarget = safeRedirectTarget(
+    request.nextUrl.searchParams.get("from"),
+    request.url,
+  );
 
   const license = await getLicenseRecord();
   if (!license) {

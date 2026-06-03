@@ -270,6 +270,26 @@ To issue a license: INSERT a row into this table via Supabase Dashboard.
 
 ---
 
+---
+
+## Security Hardening (post-Phase-7)
+
+Security audit performed; all HIGH and MEDIUM issues addressed:
+
+- [x] **HTTP Security Headers** (`next.config.js`): CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, HSTS (production only)
+- [x] **Open redirect fixed** (`/api/license/refresh`): `from` parameter validated against app origin before redirect
+- [x] **OAuth buttons removed**: Google/GitHub buttons removed from SignIn — providers not configured in `authOptions`, were dead UI from boilerplate
+- [x] **Registration locked after first user** (`/api/register`): Only the very first registration succeeds (becomes Super Admin); all subsequent registrations return 403 — new users must be invited via `/api/users`
+- [x] **Password minimum length** (`/api/register`): 8 characters minimum enforced server-side
+- [x] **Super Admin race condition fixed** (`/api/register`): userCount check + user creation wrapped in a Prisma transaction
+- [x] **Rate limiting** (`src/lib/rateLimit.ts`): in-memory sliding-window limiter; 10 sign-in attempts / 15 min / IP (middleware), 5 register attempts / hour / IP (route)
+
+Remaining known items (low severity, deferred):
+- Magic byte / file signature validation for evidence uploads (currently extension + MIME only)
+- Multi-instance rate limiting (replace in-memory limiter with Redis-backed one if scaling beyond single process)
+
+---
+
 ## Dependency Order
 
 ```

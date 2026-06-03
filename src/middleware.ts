@@ -1,6 +1,10 @@
 import { getToken } from "next-auth/jwt";
 import { type NextRequest, NextResponse } from "next/server";
 import { COOKIE_NAME, VALIDITY_SECONDS, verifyLicenseCookie } from "@/lib/license/cookie";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimit";
+
+// 10 sign-in attempts per 15 minutes per IP
+const SIGNIN_RATE_LIMIT = { maxRequests: 10, windowMs: 15 * 60 * 1000 };
 
 // The activation page lives in the (setup) route group, so its URL is /activate
 const SETUP_PATH = "/activate";
@@ -35,7 +39,20 @@ function isPublicAuthPath(pathname: string): boolean {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (shouldSkip(pathname)) return NextResponse.next();
+  if (shouldSkip(pathname)) {
+    // Rate-limit sign-in credential submissions before handing off to NextAuth
+    if (pathname === "/api/auth/callback/credentials" && request.method === "POST") {
+      const ip = getClientIp(request);
+      const rl = checkRateLimit("signin", ip, SIGNIN_RATE_LIMIT);
+      if (!rl.allowed) {
+        return new NextResponse(
+          JSON.stringify({ error: "Too many sign-in attempts. Please wait before trying again." }),
+          { status: 429, headers: { "Content-Type": "application/json" } },
+        );
+      }
+    }
+    return NextResponse.next();
+  }
 
   const cookieValue = request.cookies.get(COOKIE_NAME)?.value;
   const cookiePayload = cookieValue
