@@ -1,6 +1,6 @@
 # Eunomia — IT Security Compliance Dashboard
 
-**Eunomia** is a self-hosted IT Security Compliance Dashboard. It lets an organization run internal self-assessments against major security frameworks — **NIST CSF v2.0, ISO/IEC 27001:2022, ISO/IEC 27002:2022, and PCI DSS v4.0.1** — manage evidence, and track compliance progress.
+**Eunomia** is a self-hosted IT Security Compliance Dashboard. It lets an organization run internal self-assessments against major security frameworks — **NIST CSF v2.0, ISO/IEC 27001:2022, and PCI DSS v4.0.1** — manage evidence, and track compliance progress.
 
 It is installed on the organization's own server and activated with a license key.
 
@@ -119,10 +119,10 @@ Then, in **Project Settings**:
 ```bash
 npm run db:generate   # generate the Prisma client
 npm run db:migrate    # create all tables (prisma migrate dev)
-npm run db:seed        # load the 4 frameworks (355 controls)
+npm run db:seed        # load the 3 frameworks (262 controls)
 ```
 
-A successful seed prints: `Done. 4 frameworks, 26 domains, 355 controls.`
+A successful seed prints: `Done. 3 frameworks, 22 domains, 262 controls.`
 
 ### 6. Run the app
 
