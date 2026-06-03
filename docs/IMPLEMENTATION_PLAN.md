@@ -162,24 +162,27 @@ To issue a license: INSERT a row into this table via Supabase Dashboard.
 
 ---
 
-## Phase 5: Evidence Management
+## Phase 5: Evidence Management ✅ COMPLETED
 
 **Goal:** Assessors upload, view, and delete evidence files per control.
 
 ### Tasks
-- [ ] `src/lib/evidence/storage.ts`: save/delete files on filesystem
-- [ ] `src/lib/evidence/validate.ts`: file type + size validation
-- [ ] `src/app/api/evidence/route.ts`: POST (multipart upload)
-- [ ] `src/app/api/evidence/[evidenceId]/route.ts`: GET (stream, auth-gated), DELETE
-- [ ] `src/components/evidence/EvidenceUpload.tsx`
-- [ ] `src/components/evidence/EvidenceList.tsx`
-- [ ] Allowed: PDF, DOCX, XLSX, PNG, JPG, JPEG, TXT — max 50MB
-- [ ] Tests: upload, download, delete, type/size rejection
+- [x] `src/lib/evidence/storage.ts`: save/read/delete files on filesystem (+ path-traversal guard, filename sanitization)
+- [x] `src/lib/evidence/validate.ts`: file type + size validation
+- [x] `src/app/api/evidence/route.ts`: POST (multipart upload)
+- [x] `src/app/api/evidence/[evidenceId]/route.ts`: GET (stream, auth-gated), DELETE
+- [x] `src/components/evidence/EvidencePanel.tsx` (upload + list + delete, wired into the control response page)
+- [x] Allowed: PDF, DOCX, XLSX, PNG, JPG, JPEG, TXT — max 50MB (`MAX_FILE_SIZE_MB`)
+- [x] Tests: upload, delete, type/size rejection, RBAC, storage round-trip + traversal (23 tests)
 
 ### Acceptance criteria
-- Files served only via authenticated API (direct path blocked)
-- Cascade delete: removing a control response deletes filesystem files
-- Path: `{UPLOAD_DIR}/{tenantId}/{assessmentId}/{controlId}/{uuid}_{filename}`
+- [x] Files served only via authenticated API (direct path blocked; traversal-guarded reads)
+- [x] Cascade delete: deleting an assessment removes its evidence files from disk (DB rows cascade)
+- [x] Path: `{UPLOAD_DIR}/{tenantId}/{assessmentId}/{controlId}/{uuid}_{filename}` (relative path stored in DB)
+
+### Notes
+- Combined upload + list + delete into a single `EvidencePanel` client component instead of two separate components.
+- Evidence is attached to the `ControlResponse` (which is auto-stubbed for every control), so uploads target an existing response.
 
 ---
 

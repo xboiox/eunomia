@@ -5,6 +5,7 @@ import { getAuthSession } from "@/lib/auth/session";
 import { hasMinimumTenantRole } from "@/lib/auth/rbac";
 import { prisma } from "@/lib/prisma/client";
 import { ControlResponseForm } from "@/components/assessments/ControlResponseForm";
+import { EvidencePanel } from "@/components/evidence/EvidencePanel";
 
 interface PageProps {
   params: Promise<{ assessmentId: string; controlId: string }>;
@@ -32,7 +33,10 @@ export default async function ControlResponsePage({ params }: PageProps) {
     }),
     prisma.controlResponse.findUnique({
       where: { assessmentId_controlId: { assessmentId, controlId } },
-      include: { lastUpdatedBy: { select: { name: true, email: true } } },
+      include: {
+        lastUpdatedBy: { select: { name: true, email: true } },
+        evidences: { orderBy: { uploadedAt: "asc" } },
+      },
     }),
   ]);
   if (!control) notFound();
@@ -74,6 +78,17 @@ export default async function ControlResponsePage({ params }: PageProps) {
         }}
         lastUpdatedBy={response?.lastUpdatedBy?.name ?? response?.lastUpdatedBy?.email ?? null}
         updatedAt={response?.updatedAt ? response.updatedAt.toLocaleString() : null}
+      />
+
+      <EvidencePanel
+        assessmentId={assessmentId}
+        controlId={controlId}
+        initialEvidences={(response?.evidences ?? []).map((e) => ({
+          id: e.id,
+          fileName: e.fileName,
+          fileSize: e.fileSize,
+          uploadedAt: e.uploadedAt.toISOString(),
+        }))}
       />
     </div>
   );

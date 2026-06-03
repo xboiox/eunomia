@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/auth/session", () => ({ getAuthSession: vi.fn() }));
 vi.mock("@/lib/auth/rbac", () => ({ hasMinimumTenantRole: vi.fn() }));
+vi.mock("@/lib/evidence/storage", () => ({ deleteEvidenceFile: vi.fn() }));
 vi.mock("@/lib/prisma/client", () => ({
   prisma: {
     assessment: {
@@ -14,6 +15,7 @@ vi.mock("@/lib/prisma/client", () => ({
     },
     control: { findMany: vi.fn() },
     controlResponse: { findMany: vi.fn(), upsert: vi.fn() },
+    evidence: { findMany: vi.fn() },
   },
 }));
 
@@ -206,6 +208,7 @@ describe("DELETE /api/assessments/[assessmentId]", () => {
     vi.mocked(getAuthSession).mockResolvedValue(makeSession());
     vi.mocked(prisma.assessment.findUnique).mockResolvedValue({ id: "a-1", tenantId: "t-1" } as never);
     vi.mocked(hasMinimumTenantRole).mockResolvedValue(role);
+    vi.mocked(prisma.evidence.findMany).mockResolvedValue([] as never);
     vi.mocked(prisma.assessment.delete).mockResolvedValue({ id: "a-1" } as never);
     const { DELETE } = await import("../[assessmentId]/route");
     return DELETE(new NextRequest("http://localhost/x", { method: "DELETE" }), {

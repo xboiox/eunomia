@@ -15,7 +15,7 @@ Built on top of the **Play Next.js** SaaS boilerplate.
 
 ## Current Status
 
-**Phase 4 ✅ Complete — Phase 5 (Evidence upload) is next.**
+**Phase 5 ✅ Complete — Phase 6 (Dashboard + Recharts) is next.**
 
 ```
 Phase 0 ✅  Setup & cleanup
@@ -23,8 +23,8 @@ Phase 1 ✅  License activation (Supabase daily check + Web UI)
 Phase 2 ✅  Auth + multi-tenancy + RBAC + dashboard shell
 Phase 3 ✅  Framework seed data + browser UI (3 frameworks, 22 domains, 262 controls)
 Phase 4 ✅  Assessment management + collaborative control responses
-Phase 5 ←   Evidence upload (local filesystem)
-Phase 6     Dashboard + Recharts
+Phase 5 ✅  Evidence upload/download/delete (local filesystem)
+Phase 6 ←   Dashboard + Recharts
 Phase 7     Polish + E2E tests
 ```
 
@@ -184,6 +184,15 @@ EMAIL_FROM=
 | `src/app/dashboard/assessments/[assessmentId]/page.tsx` + `components/assessments/AssessmentControls.tsx` | Overview + clickable status filter + controls grouped by domain |
 | `src/app/dashboard/assessments/[assessmentId]/controls/[controlId]/page.tsx` + `components/assessments/ControlResponseForm.tsx` | Response form (maturity for NIST, status otherwise) |
 
+### Evidence (Phase 5)
+| File | Purpose |
+|---|---|
+| `src/lib/evidence/validate.ts` | Allowed extensions/MIME + size limit (`validateEvidenceFile`, `maxFileSizeBytes`) |
+| `src/lib/evidence/storage.ts` | `saveEvidenceFile` / `readEvidenceFile` / `deleteEvidenceFile` (+ traversal guard, `sanitizeFileName`) |
+| `src/app/api/evidence/route.ts` | POST multipart upload (ASSESSOR) |
+| `src/app/api/evidence/[evidenceId]/route.ts` | GET (auth-gated file stream) + DELETE |
+| `src/components/evidence/EvidencePanel.tsx` | Upload + list + delete, wired into the control response page |
+
 ### Infrastructure
 | File | Purpose |
 |---|---|
@@ -202,16 +211,18 @@ npm run test:run    # single run
 npm run test:coverage  # with coverage report
 ```
 
-Current: **95 tests, 9 test files, all passing** (CI runs lint + typecheck + test on every push)
+Current: **118 tests, 12 test files, all passing** (CI runs lint + typecheck + test on every push)
 
 Test files:
 - `src/lib/license/__tests__/` — validate, cookie, check (20 tests)
 - `src/lib/auth/__tests__/rbac.test.ts` — RBAC helpers (12 tests)
+- `src/lib/evidence/__tests__/` — validate + storage (15 tests)
 - `src/app/api/tenants/__tests__/route.test.ts` — tenant API (5 tests)
 - `src/app/api/users/__tests__/route.test.ts` — user API (6 tests)
 - `src/app/api/frameworks/__tests__/route.test.ts` — framework API (5 tests)
 - `src/app/api/assessments/__tests__/route.test.ts` — assessment API (create/patch/delete) + response upsert (19 tests)
-- `prisma/seeds/__tests__/seed-data.test.ts` — framework seed integrity (29 tests)
+- `src/app/api/evidence/__tests__/route.test.ts` — evidence upload/delete API (8 tests)
+- `prisma/seeds/__tests__/seed-data.test.ts` — framework seed integrity (28 tests)
 
 ---
 

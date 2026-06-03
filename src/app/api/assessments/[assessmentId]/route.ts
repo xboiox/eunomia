@@ -2,6 +2,7 @@ import { type NextRequest } from "next/server";
 
 import { hasMinimumTenantRole } from "@/lib/auth/rbac";
 import { getAuthSession } from "@/lib/auth/session";
+import { deleteEvidenceFile } from "@/lib/evidence/storage";
 import { prisma } from "@/lib/prisma/client";
 import { err, ok } from "@/lib/utils/api";
 
@@ -89,6 +90,13 @@ export async function DELETE(_request: NextRequest, { params }: RouteContext) {
 
   const canManage = await hasMinimumTenantRole(session.userId, assessment.tenantId, "ADMIN");
   if (!canManage) return err("Only a Tenant Admin can delete assessments", 403);
+
+  // Remove evidence files from disk before the DB cascade drops their rows.
+  const evidences = await prisma.evidence.findMany({
+    where: { controlResponse: { assessmentId } },
+    select: { filePath: true },
+  });
+  await Promise.all(evidences.map((e) => deleteEvidenceFile(e.filePath)));
 
   await prisma.assessment.delete({ where: { id: assessmentId } });
   return ok({ deleted: true });
