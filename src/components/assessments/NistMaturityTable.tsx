@@ -55,15 +55,15 @@ export function NistMaturityTable({ data }: NistMaturityTableProps) {
                     </td>
                   </tr>
                 ))}
-                {/* Domain average row */}
-                <tr className="bg-[#2b5ea7]">
+                {/* Domain average row — same color as the domain header */}
+                <tr className={color.bg}>
                   <td
                     colSpan={2}
-                    className="px-4 py-2 text-sm font-semibold text-white"
+                    className={`px-4 py-2 text-sm font-semibold ${color.text}`}
                   >
                     Average Maturity Level {domain.domainName}
                   </td>
-                  <td className="w-16 px-4 py-2 text-right text-sm font-bold text-white">
+                  <td className={`w-16 px-4 py-2 text-right text-sm font-bold ${color.text}`}>
                     {maturityBadge(domain.avgMaturity)}
                   </td>
                 </tr>
