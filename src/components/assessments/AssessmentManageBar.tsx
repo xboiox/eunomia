@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -96,14 +97,22 @@ export function AssessmentManageBar({
           </select>
         </label>
 
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={busy}
-          className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
-        >
-          Delete assessment
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/dashboard/assessments/${assessmentId}/edit`}
+            className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            Edit details
+          </Link>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={busy}
+            className="rounded-lg border border-red-300 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
+          >
+            Delete assessment
+          </button>
+        </div>
       </div>
 
       {message && (

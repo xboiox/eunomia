@@ -69,3 +69,56 @@ describe("getLicenseRecord", () => {
     expect(record).not.toBeNull();
   });
 });
+
+describe("getLicenseStatus", () => {
+  it("reports not activated when no License record exists", async () => {
+    const { prisma } = await import("@/lib/prisma/client");
+    vi.mocked(prisma.license.findFirst).mockResolvedValue(null);
+
+    const { getLicenseStatus } = await import("../check");
+    const status = await getLicenseStatus();
+
+    expect(status.activated).toBe(false);
+    expect(status.isExpired).toBe(false);
+    expect(status.maxTenants).toBeNull();
+  });
+
+  it("never exposes the license key value", async () => {
+    const { prisma } = await import("@/lib/prisma/client");
+    vi.mocked(prisma.license.findFirst).mockResolvedValue(makeDbRecord());
+
+    const { getLicenseStatus } = await import("../check");
+    const status = await getLicenseStatus();
+
+    expect(status).not.toHaveProperty("licenseKey");
+    expect(JSON.stringify(status)).not.toContain("TEST-KEY");
+  });
+
+  it("returns active status with metadata when not expired", async () => {
+    const { prisma } = await import("@/lib/prisma/client");
+    vi.mocked(prisma.license.findFirst).mockResolvedValue(
+      makeDbRecord({ expiresAt: new Date("2099-01-01") }),
+    );
+
+    const { getLicenseStatus } = await import("../check");
+    const status = await getLicenseStatus();
+
+    expect(status.activated).toBe(true);
+    expect(status.isExpired).toBe(false);
+    expect(status.maxTenants).toBe(5);
+    expect(status.licenseType).toBe("professional");
+  });
+
+  it("flags isExpired when expiresAt is in the past (still activated)", async () => {
+    const { prisma } = await import("@/lib/prisma/client");
+    vi.mocked(prisma.license.findFirst).mockResolvedValue(
+      makeDbRecord({ expiresAt: new Date("2020-01-01") }),
+    );
+
+    const { getLicenseStatus } = await import("../check");
+    const status = await getLicenseStatus();
+
+    expect(status.activated).toBe(true);
+    expect(status.isExpired).toBe(true);
+  });
+});

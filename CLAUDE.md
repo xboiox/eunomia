@@ -210,7 +210,16 @@ EMAIL_FROM=
 | `src/components/dashboard/StatsCards.tsx` | Summary stat cards (server component) |
 | `src/components/dashboard/DeadlineList.tsx` | Upcoming deadlines ≤30 days, urgency color coding, links to control page |
 | `src/app/dashboard/page.tsx` | Overview: stats, recent assessments (mini bar), deadlines |
-| `src/app/dashboard/settings/page.tsx` | Settings page (account info + placeholder) |
+| `src/app/dashboard/settings/page.tsx` | Settings: account info + License status section (Super Admin only) + placeholder |
+| `src/components/dashboard/SignOutButton.tsx` | Sign-out button in sidebar footer (`signOut` from next-auth/react → `/signin`) |
+| `src/components/dashboard/ChangeLicenseKeyForm.tsx` | Collapsible form to change license key (PUTs `/api/license/activate`); status only, never shows the key |
+
+### Account / Settings (Phase 7 polish)
+| File | Purpose |
+|---|---|
+| `src/app/dashboard/assessments/[assessmentId]/edit/page.tsx` + `components/assessments/EditAssessmentForm.tsx` | Edit assessment name/description/deadline (ADMIN); tenant + framework read-only (cannot move tenants / orphan responses). Reuses existing `PATCH /api/assessments/[id]` |
+| `getLicenseStatus()` in `src/lib/license/check.ts` | Safe license summary (type, maxTenants, expiresAt, lastValidatedAt, isExpired) — **never** returns the key value |
+| `PUT /api/license/activate` | Change/replace the active license key (Super Admin only); validates via Supabase → upsert License → refresh cookie |
 
 ### Infrastructure
 | File | Purpose |
@@ -230,14 +239,15 @@ npm run test:run    # single run
 npm run test:coverage  # with coverage report
 ```
 
-Current: **135 tests, 13 test files, all passing** (CI: Node 24, lint + typecheck + test on every push)
+Current: **145 tests, 14 test files, all passing** (CI: Node 24, lint + typecheck + test on every push)
 Coverage: statements 82%, functions 90%, lines 85%, branches 75% (threshold: 80/80/80/70)
 
 Test files:
-- `src/lib/license/__tests__/` — validate, cookie, check (20 tests)
+- `src/lib/license/__tests__/` — validate, cookie, check (incl. `getLicenseStatus`, 24 tests)
 - `src/lib/auth/__tests__/rbac.test.ts` — RBAC helpers (12 tests)
 - `src/lib/evidence/__tests__/` — validate + storage (15 tests)
 - `src/lib/utils/__tests__/compliance.test.ts` — compliance calculations (13 tests)
+- `src/app/api/license/activate/__tests__/route.test.ts` — PUT change-key (Super Admin gate + upsert) (6 tests)
 - `src/app/api/tenants/__tests__/route.test.ts` — tenant API (5 tests)
 - `src/app/api/users/__tests__/route.test.ts` — user API (6 tests)
 - `src/app/api/frameworks/__tests__/route.test.ts` — framework API (5 tests)

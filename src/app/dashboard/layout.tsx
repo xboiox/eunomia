@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getAuthSession } from "@/lib/auth/session";
 import { getUserTenants } from "@/lib/auth/rbac";
 import { SidebarNav } from "@/components/dashboard/SidebarNav";
+import { SignOutButton } from "@/components/dashboard/SignOutButton";
 
 const DashboardIcon = () => (
   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -86,6 +87,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           {session.isSuperAdmin && (
             <span className="text-xs text-blue-600 dark:text-blue-400">Super Admin</span>
           )}
+          <SignOutButton />
         </div>
       </aside>
 
