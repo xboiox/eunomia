@@ -84,8 +84,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
             priority
           />
           <div className="min-w-0">
-            <p className="truncate text-sm font-bold text-gray-900 dark:text-white">Eunomia</p>
-            <p className="text-xs text-gray-400">Compliance</p>
+            <p className="truncate text-sm font-bold tracking-tight text-gray-900 dark:text-white">Eunomia</p>
+            <p className="truncate text-[10px] font-medium uppercase tracking-widest text-gray-400">IT Compliance Dashboard</p>
           </div>
         </div>
 
