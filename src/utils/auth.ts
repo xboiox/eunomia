@@ -5,6 +5,7 @@ import EmailProvider from "next-auth/providers/email";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { Adapter } from "next-auth/adapters";
 import { prisma } from "@/lib/prisma/client";
+import { getSecurityPolicy, isPasswordExpired } from "@/lib/settings/security";
 
 export const authOptions: NextAuthOptions = {
   pages: {
@@ -35,14 +36,43 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid email or password");
         }
 
-        const passwordMatch = await bcrypt.compare(
-          credentials.password,
-          user.password,
-        );
+        // Account lockout check
+        if (user.lockedUntil && user.lockedUntil > new Date()) {
+          const minutesLeft = Math.ceil((user.lockedUntil.getTime() - Date.now()) / 60000);
+          throw new Error(`Account is locked. Try again in ${minutesLeft} minute${minutesLeft === 1 ? "" : "s"}.`);
+        }
+
+        const passwordMatch = await bcrypt.compare(credentials.password, user.password);
 
         if (!passwordMatch) {
-          throw new Error("Invalid email or password");
+          // Increment failed attempts; lock if threshold reached
+          const policy = await getSecurityPolicy();
+          const newCount = user.failedLoginAttempts + 1;
+          const shouldLock = newCount >= policy.lockoutAttempts;
+
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              failedLoginAttempts: newCount,
+              lockedUntil: shouldLock
+                ? new Date(Date.now() + policy.lockoutMinutes * 60 * 1000)
+                : user.lockedUntil,
+            },
+          });
+
+          if (shouldLock) {
+            throw new Error(`Too many failed attempts. Account locked for ${policy.lockoutMinutes} minute${policy.lockoutMinutes === 1 ? "" : "s"}.`);
+          }
+
+          const remaining = policy.lockoutAttempts - newCount;
+          throw new Error(`Invalid email or password. ${remaining} attempt${remaining === 1 ? "" : "s"} remaining before lockout.`);
         }
+
+        // Successful login — reset failed attempts and lockout
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { failedLoginAttempts: 0, lockedUntil: null },
+        });
 
         return user;
       },
@@ -67,12 +97,25 @@ export const authOptions: NextAuthOptions = {
     jwt: async ({ token, user }) => {
       if (user) {
         token.id = user.id;
-        const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
-          select: { isSuperAdmin: true, mustChangePassword: true },
-        });
+        const [dbUser, policy] = await Promise.all([
+          prisma.user.findUnique({
+            where: { id: user.id },
+            select: {
+              isSuperAdmin: true,
+              mustChangePassword: true,
+              passwordChangedAt: true,
+              createdAt: true,
+            },
+          }),
+          getSecurityPolicy(),
+        ]);
+
+        const expired = dbUser
+          ? isPasswordExpired(policy, dbUser.passwordChangedAt, dbUser.createdAt)
+          : false;
+
         token.isSuperAdmin = dbUser?.isSuperAdmin ?? false;
-        token.mustChangePassword = dbUser?.mustChangePassword ?? false;
+        token.mustChangePassword = (dbUser?.mustChangePassword ?? false) || expired;
       }
       return token;
     },

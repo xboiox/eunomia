@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { getAuthSession } from "@/lib/auth/session";
 import { getLicenseStatus } from "@/lib/license/check";
 import { ChangeLicenseKeyForm } from "@/components/dashboard/ChangeLicenseKeyForm";
+import { SecurityPolicyForm } from "@/components/dashboard/SecurityPolicyForm";
+import { ChangePasswordForm } from "@/components/dashboard/ChangePasswordForm";
 
 const EXPIRY_WARNING_DAYS = 30;
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -67,6 +69,8 @@ export default async function SettingsPage() {
               </dd>
             </div>
           </dl>
+
+          <ChangePasswordForm />
         </section>
 
         {/* License — Super Admin only. Shows status only, never the key value. */}
@@ -131,6 +135,17 @@ export default async function SettingsPage() {
             )}
 
             <ChangeLicenseKeyForm />
+          </section>
+        )}
+
+        {/* Security Policy — Super Admin only */}
+        {session.isSuperAdmin && (
+          <section className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Security Policy</h2>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Password expiry and account lockout apply to all users. Changes take effect on next login.
+            </p>
+            <SecurityPolicyForm />
           </section>
         )}
 

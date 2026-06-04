@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   const members = await prisma.tenantUser.findMany({
     where: { tenantId },
     include: {
-      user: { select: { id: true, name: true, email: true, createdAt: true } },
+      user: { select: { id: true, name: true, email: true, createdAt: true, lockedUntil: true } },
     },
     orderBy: { createdAt: "asc" },
   });

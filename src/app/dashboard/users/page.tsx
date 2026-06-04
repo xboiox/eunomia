@@ -9,6 +9,7 @@ interface TenantMember {
   name: string | null;
   email: string;
   role: "ADMIN" | "ASSESSOR";
+  lockedUntil?: string | null;
 }
 
 interface Tenant {
@@ -133,6 +134,13 @@ function UsersContent() {
     setPasswordModal({ type: "reset", userName: member.name ?? member.email, password: data.data.temporaryPassword });
   }
 
+  async function handleUnlock(userId: string) {
+    const res = await fetch(`/api/users/${userId}/unlock`, { method: "POST" });
+    if (!res.ok) { toast.error("Failed to unlock account"); return; }
+    toast.success("Account unlocked.");
+    setMembers((prev) => prev.map((m) => m.id === userId ? { ...m, lockedUntil: null } : m));
+  }
+
   async function handleRemove(userId: string) {
     const res = await fetch(`/api/users/${userId}?tenantId=${tenantId}`, { method: "DELETE" });
     if (!res.ok) { toast.error("Failed to remove user"); return; }
@@ -222,8 +230,17 @@ function UsersContent() {
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   {members.map((m) => (
-                    <tr key={m.id}>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{m.name ?? "—"}</td>
+                    <tr key={m.id} className={m.lockedUntil && new Date(m.lockedUntil) > new Date() ? "bg-red-50 dark:bg-red-900/10" : ""}>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                        <div className="flex items-center gap-2">
+                          {m.name ?? "—"}
+                          {m.lockedUntil && new Date(m.lockedUntil) > new Date() && (
+                            <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                              Locked
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{m.email}</td>
                       <td className="px-6 py-4">
                         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -234,6 +251,12 @@ function UsersContent() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-3">
+                          {m.lockedUntil && new Date(m.lockedUntil) > new Date() && (
+                            <button onClick={() => handleUnlock(m.id)}
+                              className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300">
+                              Unlock
+                            </button>
+                          )}
                           <button onClick={() => handleResetPassword(m)}
                             className="text-xs text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-300">
                             Reset password
