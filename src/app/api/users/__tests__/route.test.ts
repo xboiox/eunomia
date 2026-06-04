@@ -18,9 +18,14 @@ vi.mock("bcrypt", () => ({
   default: { hash: vi.fn(async () => "hashed"), compare: vi.fn(async () => true) },
 }));
 
+vi.mock("@/lib/email/send", () => ({
+  sendTenantAddedEmail: vi.fn(async () => {}),
+}));
+
 vi.mock("@/lib/prisma/client", () => ({
   prisma: {
     user: { findUnique: vi.fn(), findMany: vi.fn(), create: vi.fn() },
+    tenant: { findUnique: vi.fn() },
     tenantUser: {
       findUnique: vi.fn(),
       findMany: vi.fn(),
@@ -93,7 +98,12 @@ describe("GET /api/users", () => {
 });
 
 describe("POST /api/users", () => {
-  const validBody = { name: "Bob", email: "bob@test.com", tenantId: "t-1", role: "ASSESSOR" };
+  const newUserBody = { name: "Bob", email: "bob@test.com", tenantId: "t-1", role: "ASSESSOR" };
+  const existingUserBody = { email: "alice@test.com", tenantId: "t-1", role: "ASSESSOR" };
+
+  function mockTenant() {
+    return { id: "t-1", name: "Acme Corp" };
+  }
 
   it("returns 403 when requester is not ADMIN in tenant", async () => {
     const { getAuthSession } = await import("@/lib/auth/session");
@@ -104,35 +114,19 @@ describe("POST /api/users", () => {
     const { POST } = await import("../route");
     const req = new NextRequest("http://localhost/api/users", {
       method: "POST",
-      body: JSON.stringify(validBody),
+      body: JSON.stringify(newUserBody),
       headers: { "Content-Type": "application/json" },
     });
     expect((await POST(req)).status).toBe(403);
   });
 
-  it("returns 409 when email already exists", async () => {
+  it("creates new user account and returns 201 with temporaryPassword", async () => {
     const { getAuthSession } = await import("@/lib/auth/session");
     const { hasMinimumTenantRole } = await import("@/lib/auth/rbac");
     const { prisma } = await import("@/lib/prisma/client");
     vi.mocked(getAuthSession).mockResolvedValue(makeSession());
     vi.mocked(hasMinimumTenantRole).mockResolvedValue(true);
-    vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: "u-2" } as never);
-
-    const { POST } = await import("../route");
-    const req = new NextRequest("http://localhost/api/users", {
-      method: "POST",
-      body: JSON.stringify(validBody),
-      headers: { "Content-Type": "application/json" },
-    });
-    expect((await POST(req)).status).toBe(409);
-  });
-
-  it("creates user and returns 201 with temporaryPassword", async () => {
-    const { getAuthSession } = await import("@/lib/auth/session");
-    const { hasMinimumTenantRole } = await import("@/lib/auth/rbac");
-    const { prisma } = await import("@/lib/prisma/client");
-    vi.mocked(getAuthSession).mockResolvedValue(makeSession());
-    vi.mocked(hasMinimumTenantRole).mockResolvedValue(true);
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue(mockTenant() as never);
     vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
     vi.mocked(prisma.user.create).mockResolvedValue({
       id: "u-new", name: "Bob", email: "bob@test.com", createdAt: new Date(),
@@ -141,12 +135,58 @@ describe("POST /api/users", () => {
     const { POST } = await import("../route");
     const req = new NextRequest("http://localhost/api/users", {
       method: "POST",
-      body: JSON.stringify(validBody),
+      body: JSON.stringify(newUserBody),
       headers: { "Content-Type": "application/json" },
     });
     const res = await POST(req);
     expect(res.status).toBe(201);
     const body = await res.json();
+    expect(body.data.created).toBe(true);
     expect(body.data.temporaryPassword).toBe("TempPass1!");
+  });
+
+  it("adds existing user to tenant and returns 200 without temporaryPassword", async () => {
+    const { getAuthSession } = await import("@/lib/auth/session");
+    const { hasMinimumTenantRole } = await import("@/lib/auth/rbac");
+    const { prisma } = await import("@/lib/prisma/client");
+    vi.mocked(getAuthSession).mockResolvedValue(makeSession());
+    vi.mocked(hasMinimumTenantRole).mockResolvedValue(true);
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue(mockTenant() as never);
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({
+      id: "u-existing", name: "Alice", email: "alice@test.com", createdAt: new Date(),
+    } as never);
+    vi.mocked(prisma.tenantUser.findUnique).mockResolvedValue(null);
+    vi.mocked(prisma.tenantUser.create).mockResolvedValue({} as never);
+
+    const { POST } = await import("../route");
+    const req = new NextRequest("http://localhost/api/users", {
+      method: "POST",
+      body: JSON.stringify(existingUserBody),
+      headers: { "Content-Type": "application/json" },
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.data.created).toBe(false);
+    expect(body.data.temporaryPassword).toBeUndefined();
+  });
+
+  it("returns 409 when user is already a member of this tenant", async () => {
+    const { getAuthSession } = await import("@/lib/auth/session");
+    const { hasMinimumTenantRole } = await import("@/lib/auth/rbac");
+    const { prisma } = await import("@/lib/prisma/client");
+    vi.mocked(getAuthSession).mockResolvedValue(makeSession());
+    vi.mocked(hasMinimumTenantRole).mockResolvedValue(true);
+    vi.mocked(prisma.tenant.findUnique).mockResolvedValue(mockTenant() as never);
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: "u-2", name: "Alice", email: "alice@test.com", createdAt: new Date() } as never);
+    vi.mocked(prisma.tenantUser.findUnique).mockResolvedValue({ id: "tu-1" } as never);
+
+    const { POST } = await import("../route");
+    const req = new NextRequest("http://localhost/api/users", {
+      method: "POST",
+      body: JSON.stringify(existingUserBody),
+      headers: { "Content-Type": "application/json" },
+    });
+    expect((await POST(req)).status).toBe(409);
   });
 });

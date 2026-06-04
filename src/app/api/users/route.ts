@@ -3,6 +3,7 @@ import { err, ok } from "@/lib/utils/api";
 import { getAuthSession } from "@/lib/auth/session";
 import { hasMinimumTenantRole } from "@/lib/auth/rbac";
 import { generateTemporaryPassword } from "@/lib/auth/generatePassword";
+import { sendTenantAddedEmail } from "@/lib/email/send";
 import { prisma } from "@/lib/prisma/client";
 import { type NextRequest } from "next/server";
 import type { TenantRole } from "@prisma/client";
@@ -36,10 +37,16 @@ interface CreateUserBody {
   tenantId?: string;
 }
 
-// POST /api/users — create a new user account and add them to a tenant.
-// The caller (Tenant Admin or Super Admin) receives a one-time temporary
-// password to hand to the new user out-of-band. The user is forced to change
-// it on first login.
+// POST /api/users — smart create-or-add:
+//
+//   New user (email not in DB):
+//     Creates account with auto-generated temp password (mustChangePassword=true).
+//     Returns { created: true, temporaryPassword } — show to admin once.
+//
+//   Existing user (already has an account, e.g. member of another tenant):
+//     Adds them to the new tenant without touching their account or password.
+//     Sends an email notification if SMTP is configured.
+//     Returns { created: false } — admin informs user manually if SMTP absent.
 export async function POST(request: NextRequest) {
   const session = await getAuthSession();
   if (!session) return err("Unauthorized", 401);
@@ -53,8 +60,8 @@ export async function POST(request: NextRequest) {
 
   const { name, email, role, tenantId } = body;
 
-  if (!name?.trim() || !email?.trim() || !tenantId || !role) {
-    return err("name, email, role and tenantId are required", 400);
+  if (!email?.trim() || !tenantId || !role) {
+    return err("email, role and tenantId are required", 400);
   }
   if (!["ADMIN", "ASSESSOR"].includes(role)) {
     return err("role must be ADMIN or ASSESSOR", 400);
@@ -66,10 +73,47 @@ export async function POST(request: NextRequest) {
   const canAccess = await hasMinimumTenantRole(session.userId, tenantId, "ADMIN");
   if (!canAccess) return err("Forbidden", 403);
 
-  const existing = await prisma.user.findUnique({
-    where: { email: email.toLowerCase() },
+  const tenant = await prisma.tenant.findUnique({
+    where: { id: tenantId },
+    select: { name: true },
   });
-  if (existing) return err("An account with this email already exists", 409);
+  if (!tenant) return err("Tenant not found", 404);
+
+  const existingUser = await prisma.user.findUnique({
+    where: { email: email.toLowerCase() },
+    select: { id: true, name: true, email: true, createdAt: true },
+  });
+
+  if (existingUser) {
+    // User already has an account — check they're not already in this tenant.
+    const alreadyMember = await prisma.tenantUser.findUnique({
+      where: { userId_tenantId: { userId: existingUser.id, tenantId } },
+    });
+    if (alreadyMember) return err("This user is already a member of the organization", 409);
+
+    await prisma.tenantUser.create({
+      data: { userId: existingUser.id, tenantId, role },
+    });
+
+    // Notify the user if SMTP is configured — they didn't get a temp password
+    // so this is the only way they learn about the new tenant access.
+    await sendTenantAddedEmail({
+      to: existingUser.email!,
+      userName: existingUser.name ?? existingUser.email!,
+      tenantName: tenant.name,
+      role,
+      appUrl: process.env.NEXTAUTH_URL ?? "http://localhost:3000",
+    }).catch(() => {
+      // Email failure is non-fatal; admin can notify manually.
+    });
+
+    return ok({ ...existingUser, role, created: false }, 200);
+  }
+
+  // New user — name is required when creating a fresh account.
+  if (!name?.trim()) {
+    return err("name is required when creating a new user account", 400);
+  }
 
   const temporaryPassword = generateTemporaryPassword();
   const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
@@ -87,6 +131,5 @@ export async function POST(request: NextRequest) {
     select: { id: true, name: true, email: true, createdAt: true },
   });
 
-  // The temporary password is returned ONCE — it is not stored in plain text.
-  return ok({ ...user, role, temporaryPassword }, 201);
+  return ok({ ...user, role, created: true, temporaryPassword }, 201);
 }

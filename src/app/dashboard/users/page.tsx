@@ -107,16 +107,23 @@ function UsersContent() {
     const res = await fetch("/api/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newName, email: newEmail, role: newRole, tenantId }),
+      body: JSON.stringify({ name: newName || undefined, email: newEmail, role: newRole, tenantId }),
     });
     const data = await res.json();
     setCreating(false);
-    if (!res.ok) { toast.error(data.error ?? "Failed to create user"); return; }
+    if (!res.ok) { toast.error(data.error ?? "Failed to add user"); return; }
 
     setMembers((prev) => [...prev, { id: data.data.id, name: data.data.name, email: data.data.email, role: data.data.role }]);
     setNewName("");
     setNewEmail("");
-    setPasswordModal({ type: "create", userName: data.data.name ?? data.data.email, password: data.data.temporaryPassword });
+
+    if (data.data.created) {
+      // New account — show the one-time temp password
+      setPasswordModal({ type: "create", userName: data.data.name ?? data.data.email, password: data.data.temporaryPassword });
+    } else {
+      // Existing account added to this tenant
+      toast.success(`${data.data.name ?? data.data.email} added to this organization.`);
+    }
   }
 
   async function handleResetPassword(member: TenantMember) {
@@ -159,15 +166,16 @@ function UsersContent() {
         <>
           {/* Create user form */}
           <div className="mt-6 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800">
-            <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Create new user</h2>
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Add user to organization</h2>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              A temporary password will be generated and shown once. The user must change it on first login.
+              New user: fill Name + Email → account created with a temporary password (shown once).<br />
+              Existing user (already has an account): Email only → added to this organization directly.
             </p>
             <form onSubmit={handleCreate} className="mt-4 grid gap-3 sm:grid-cols-2">
               <label className="block text-xs font-medium text-gray-600 dark:text-gray-400">
-                Name
+                Name <span className="font-normal text-gray-400">(required for new users)</span>
                 <input
-                  type="text" required placeholder="Jane Doe"
+                  type="text" placeholder="Jane Doe"
                   value={newName} onChange={(e) => setNewName(e.target.value)}
                   className={`mt-1 ${inputClass}`}
                 />
