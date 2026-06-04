@@ -1,6 +1,8 @@
+import bcrypt from "bcrypt";
 import { err, ok } from "@/lib/utils/api";
 import { getAuthSession } from "@/lib/auth/session";
 import { hasMinimumTenantRole } from "@/lib/auth/rbac";
+import { generateTemporaryPassword } from "@/lib/auth/generatePassword";
 import { prisma } from "@/lib/prisma/client";
 import { type NextRequest } from "next/server";
 import type { TenantRole } from "@prisma/client";
@@ -27,43 +29,64 @@ export async function GET(request: NextRequest) {
   return ok(data);
 }
 
+interface CreateUserBody {
+  name?: string;
+  email?: string;
+  role?: TenantRole;
+  tenantId?: string;
+}
+
+// POST /api/users — create a new user account and add them to a tenant.
+// The caller (Tenant Admin or Super Admin) receives a one-time temporary
+// password to hand to the new user out-of-band. The user is forced to change
+// it on first login.
 export async function POST(request: NextRequest) {
   const session = await getAuthSession();
   if (!session) return err("Unauthorized", 401);
 
-  let body: { email?: string; tenantId?: string; role?: TenantRole };
+  let body: CreateUserBody;
   try {
     body = await request.json();
   } catch {
     return err("Invalid request body", 400);
   }
 
-  const { email, tenantId, role } = body;
-  if (!email?.trim() || !tenantId || !role) {
-    return err("email, tenantId and role are required", 400);
-  }
+  const { name, email, role, tenantId } = body;
 
+  if (!name?.trim() || !email?.trim() || !tenantId || !role) {
+    return err("name, email, role and tenantId are required", 400);
+  }
   if (!["ADMIN", "ASSESSOR"].includes(role)) {
     return err("role must be ADMIN or ASSESSOR", 400);
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    return err("Invalid email address", 400);
   }
 
   const canAccess = await hasMinimumTenantRole(session.userId, tenantId, "ADMIN");
   if (!canAccess) return err("Forbidden", 403);
 
-  const targetUser = await prisma.user.findUnique({
+  const existing = await prisma.user.findUnique({
     where: { email: email.toLowerCase() },
-    select: { id: true, name: true, email: true },
   });
-  if (!targetUser) return err("No user found with this email. Ask them to register first.", 404);
+  if (existing) return err("An account with this email already exists", 409);
 
-  const existing = await prisma.tenantUser.findUnique({
-    where: { userId_tenantId: { userId: targetUser.id, tenantId } },
+  const temporaryPassword = generateTemporaryPassword();
+  const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
+
+  const user = await prisma.user.create({
+    data: {
+      name: name.trim(),
+      email: email.toLowerCase(),
+      password: hashedPassword,
+      mustChangePassword: true,
+      tenantUsers: {
+        create: { tenantId, role },
+      },
+    },
+    select: { id: true, name: true, email: true, createdAt: true },
   });
-  if (existing) return err("This user is already a member of the tenant", 409);
 
-  await prisma.tenantUser.create({
-    data: { userId: targetUser.id, tenantId, role },
-  });
-
-  return ok({ ...targetUser, role }, 201);
+  // The temporary password is returned ONCE — it is not stored in plain text.
+  return ok({ ...user, role, temporaryPassword }, 201);
 }

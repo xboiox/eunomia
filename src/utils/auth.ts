@@ -69,9 +69,10 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         const dbUser = await prisma.user.findUnique({
           where: { id: user.id },
-          select: { isSuperAdmin: true },
+          select: { isSuperAdmin: true, mustChangePassword: true },
         });
         token.isSuperAdmin = dbUser?.isSuperAdmin ?? false;
+        token.mustChangePassword = dbUser?.mustChangePassword ?? false;
       }
       return token;
     },
@@ -83,7 +84,8 @@ export const authOptions: NextAuthOptions = {
           user: {
             ...session.user,
             id: token.id as string,
-            isSuperAdmin: (token.isSuperAdmin as boolean) ?? false,
+            isSuperAdmin: token.isSuperAdmin ?? false,
+            mustChangePassword: token.mustChangePassword ?? false,
           },
         };
       }

@@ -5,6 +5,7 @@ export interface AuthSession {
   userId: string;
   email: string;
   isSuperAdmin: boolean;
+  mustChangePassword: boolean;
 }
 
 export async function getAuthSession(): Promise<AuthSession | null> {
@@ -15,5 +16,6 @@ export async function getAuthSession(): Promise<AuthSession | null> {
     userId: session.user.id,
     email: session.user.email ?? "",
     isSuperAdmin: session.user.isSuperAdmin ?? false,
+    mustChangePassword: session.user.mustChangePassword ?? false,
   };
 }

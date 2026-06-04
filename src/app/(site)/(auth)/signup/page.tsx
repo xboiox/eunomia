@@ -1,20 +1,6 @@
-import SignUp from "@/components/Auth/SignUp";
-import Breadcrumb from "@/components/Common/Breadcrumb";
-import { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title:
-    "Sign Up | Play SaaS Starter Kit and Boilerplate for Next.js",
-};
-
-const SignupPage = () => {
-  return (
-    <>
-      <Breadcrumb pageName="Sign Up Page" />
-
-      <SignUp />
-    </>
-  );
-};
-
-export default SignupPage;
+// Self-registration is closed. New users must be created by an administrator.
+export default function SignupPage() {
+  redirect("/signin?notice=registration-closed");
+}

@@ -96,6 +96,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/signin", request.url));
   }
 
+  // Force first-login password change before accessing anything else
+  const CHANGE_PASSWORD_PATH = "/dashboard/change-password";
+  if (token.mustChangePassword && pathname !== CHANGE_PASSWORD_PATH) {
+    return NextResponse.redirect(new URL(CHANGE_PASSWORD_PATH, request.url));
+  }
+
   // Dashboard routes: redirect to /dashboard if accessing root while authenticated
   if (pathname === "/") {
     return NextResponse.redirect(new URL(DASHBOARD_PREFIX, request.url));

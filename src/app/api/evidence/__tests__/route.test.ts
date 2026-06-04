@@ -17,7 +17,7 @@ vi.mock("@/lib/prisma/client", () => ({
 }));
 
 function makeSession() {
-  return { userId: "user-1", email: "u@test.com", isSuperAdmin: false };
+  return { userId: "user-1", email: "u@test.com", isSuperAdmin: false, mustChangePassword: false };
 }
 
 function uploadRequest(fields: { file?: File; assessmentId?: string; controlId?: string }) {

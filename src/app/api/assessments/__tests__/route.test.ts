@@ -20,7 +20,7 @@ vi.mock("@/lib/prisma/client", () => ({
 }));
 
 function makeSession(overrides: Record<string, unknown> = {}) {
-  return { userId: "user-1", email: "u@test.com", isSuperAdmin: false, ...overrides };
+  return { userId: "user-1", email: "u@test.com", isSuperAdmin: false, mustChangePassword: false, ...overrides };
 }
 
 function jsonRequest(url: string, method: string, body: unknown) {
