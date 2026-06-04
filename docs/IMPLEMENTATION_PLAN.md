@@ -290,6 +290,26 @@ Remaining known items (low severity, deferred):
 
 ---
 
+## Auth & User Management Hardening (post-security-audit)
+
+Admin-only user provisioning + password lifecycle:
+
+- [x] **Invite-only user creation**: `POST /api/users` creates a new account with an auto-generated 12-char temp password (shown once to admin). Subsequent registrations via `/signup` return 403.
+- [x] **Multi-tenant single account**: existing users added to new tenants without creating a new account; email notification sent if SMTP configured.
+- [x] **Force password change on first login**: `mustChangePassword=true` on new accounts and after admin reset; middleware redirects all dashboard pages (not API routes) to `/dashboard/change-password`.
+- [x] **Self change password**: `ChangePasswordForm` in Settings page; calls `PATCH /api/users/me/password`; sets `passwordChangedAt`.
+- [x] **Password expiry policy**: `passwordChangedAt` on User; `isPasswordExpired()` checked in JWT callback; policy stored in `AppSettings` DB table.
+- [x] **Account lockout**: `failedLoginAttempts` + `lockedUntil` on User; configurable threshold and duration; auto-unlock after duration; admin unlock via `POST /api/users/[id]/unlock`.
+- [x] **Security Policy UI**: Super Admin configures expiry days, lockout attempts, lockout minutes from Settings → Security Policy (persisted to `AppSettings`, no restart needed).
+- [x] **Admin reset password**: `POST /api/users/[id]/reset-password` → new temp password shown once; sets `mustChangePassword=true`.
+- [x] **Locked account badge + Unlock button** in Users page.
+
+DB migrations added:
+- `20260604000000_user_must_change_password` — adds `mustChangePassword`
+- `20260604100000_password_policy` — adds `passwordChangedAt`, `failedLoginAttempts`, `lockedUntil` to User; creates `AppSettings` table
+
+---
+
 ## Dependency Order
 
 ```

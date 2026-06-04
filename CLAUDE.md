@@ -15,7 +15,7 @@ Built on top of the **Play Next.js** SaaS boilerplate.
 
 ## Current Status
 
-**Phase 7 ✅ Complete — All phases done.**
+**All phases complete + post-launch security hardening done.**
 
 ```
 Phase 0 ✅  Setup & cleanup
@@ -26,6 +26,7 @@ Phase 4 ✅  Assessment management + collaborative control responses
 Phase 5 ✅  Evidence upload/download/delete (local filesystem)
 Phase 6 ✅  Dashboard + Recharts (overview, status donut, domain bar, NIST radar)
 Phase 7 ✅  Polish: loading skeletons, error boundary, banners, E2E tests (Playwright)
+Post ✅    Security hardening: auth flow, password policy, account lockout, UI polish
 ```
 
 ---
@@ -37,7 +38,10 @@ Phase 7 ✅  Polish: loading skeletons, error boundary, banners, E2E tests (Play
 | License | Daily online check (Supabase REST API) + Web UI input | Simple, revocable, no cryptography needed |
 | License cookie | HS256 JWT, signed with `NEXTAUTH_SECRET`, valid 24h | Edge Runtime compatible, no extra secrets |
 | Grace period | 7 days if Supabase unreachable | Tolerates maintenance windows |
-| Auth | First registered user = Super Admin automatically | Simple for self-hosted internal deployment |
+| Auth | First registered user = Super Admin; subsequent users admin-invited only | Registration closed after first user; invite-only via Users page |
+| User creation | Admin creates user (name+email+role) → auto-generated 12-char temp password shown once → `mustChangePassword=true` | No self-registration post-setup; one account can be in multiple tenants |
+| Password policy | DB-backed `AppSettings` table (expiry days, lockout attempts, lockout minutes) | Super Admin configures from Settings UI without server restart |
+| Account lockout | `failedLoginAttempts` + `lockedUntil` on User; auto-unlock after duration; admin can unlock early | Configurable via Settings → Security Policy |
 | RBAC | `hasMinimumTenantRole()` called on every tenant-scoped API route | Explicit, testable, consistent |
 | Dashboard routes | `/dashboard/*` (explicit folder, not route group) | Clearer URL structure |
 | Framework data | Seed into PostgreSQL | Queryable, relational, consistent |
@@ -140,9 +144,14 @@ EMAIL_FROM=
 |---|---|
 | `src/lib/prisma/client.ts` | Prisma singleton — **use this everywhere** |
 | `src/lib/auth/rbac.ts` | RBAC: `checkIsSuperAdmin`, `getTenantRoleForUser`, `hasMinimumTenantRole`, `getUserTenants` |
-| `src/lib/auth/session.ts` | `getAuthSession()` — typed wrapper, use in all API routes + Server Components |
+| `src/lib/auth/session.ts` | `getAuthSession()` — typed wrapper; returns `userId, email, isSuperAdmin, mustChangePassword` |
+| `src/lib/auth/generatePassword.ts` | `generateTemporaryPassword()` — 12-char crypto-safe temp password (no ambiguous chars) |
+| `src/lib/settings/security.ts` | `getSecurityPolicy()`, `saveSecurityPolicy()`, `isPasswordExpired()` — reads/writes `AppSettings` |
+| `src/lib/email/send.ts` | `sendTenantAddedEmail()` — notification when existing user added to tenant; no-op if SMTP unconfigured |
+| `src/lib/logger.ts` | Server-side logger (no-op in test env); use instead of bare `console.*` |
+| `src/lib/rateLimit.ts` | In-memory sliding-window rate limiter; `checkRateLimit(key, ip, opts)` |
 | `src/lib/utils/api.ts` | `ok()` and `err()` — consistent API response format |
-| `src/types/next-auth.d.ts` | Augments `session.user` with `id` and `isSuperAdmin` |
+| `src/types/next-auth.d.ts` | Augments `session.user` with `id`, `isSuperAdmin`, `mustChangePassword` |
 
 ### License
 | File | Purpose |
@@ -231,9 +240,31 @@ EMAIL_FROM=
 ### Account / Settings (Phase 7 polish)
 | File | Purpose |
 |---|---|
-| `src/app/dashboard/assessments/[assessmentId]/edit/page.tsx` + `components/assessments/EditAssessmentForm.tsx` | Edit assessment name/description/deadline (ADMIN); tenant + framework read-only (cannot move tenants / orphan responses). Reuses existing `PATCH /api/assessments/[id]` |
-| `getLicenseStatus()` in `src/lib/license/check.ts` | Safe license summary (type, maxTenants, expiresAt, lastValidatedAt, isExpired) — **never** returns the key value |
-| `PUT /api/license/activate` | Change/replace the active license key (Super Admin only); validates via Supabase → upsert License → refresh cookie |
+| `src/app/dashboard/assessments/[assessmentId]/edit/page.tsx` + `components/assessments/EditAssessmentForm.tsx` | Edit assessment name/description/deadline (ADMIN); tenant + framework read-only |
+| `getLicenseStatus()` in `src/lib/license/check.ts` | Safe license summary (never returns key value) |
+| `PUT /api/license/activate` | Change license key (Super Admin only); validates via Supabase |
+
+### User Management & Security (post-Phase-7)
+| File | Purpose |
+|---|---|
+| `src/app/api/users/route.ts` | Smart create-or-add: new email → create account + temp password; existing email → add to tenant only |
+| `src/app/api/users/[userId]/reset-password/route.ts` | Admin resets password → new temp password + `mustChangePassword=true` |
+| `src/app/api/users/[userId]/unlock/route.ts` | Admin unlocks locked account early |
+| `src/app/api/users/me/password/route.ts` | User changes own password; sets `passwordChangedAt=now()`, clears `mustChangePassword` |
+| `src/app/api/admin/settings/security/route.ts` | GET/PUT security policy (Super Admin only) — persists to `AppSettings` table |
+| `src/app/dashboard/users/page.tsx` | Users page: create form + PasswordRevealModal + Reset Password + Unlock + Locked badge |
+| `src/app/dashboard/change-password/page.tsx` | Force-change page for first login / expired password; signs out after success |
+| `src/components/dashboard/ChangePasswordForm.tsx` | Self-change password form in Settings (all users) |
+| `src/components/dashboard/SecurityPolicyForm.tsx` | Security policy form in Settings (Super Admin) |
+| `src/app/(site)/(auth)/signup/page.tsx` | Redirects to `/signin?notice=registration-closed` — self-registration disabled |
+| `src/app/(site)/privacy/page.tsx` + `policy/page.tsx` | Placeholder privacy/terms pages (linked from signup) |
+
+### Security Headers & Middleware
+| File | Purpose |
+|---|---|
+| `next.config.js` | HTTP security headers on all routes: CSP, X-Frame-Options, X-Content-Type-Options, HSTS, Referrer-Policy |
+| `src/middleware.ts` | License guard + auth guard + `mustChangePassword` redirect (pages only, not API) + sign-in rate limiting |
+| `src/lib/rateLimit.ts` | In-memory sliding-window rate limiter (10 sign-in/15min, 5 register/hour per IP) |
 
 ### Infrastructure
 | File | Purpose |
@@ -253,7 +284,7 @@ npm run test:run    # single run
 npm run test:coverage  # with coverage report
 ```
 
-Current: **146 unit tests, 14 test files, all passing** + **3 E2E test files** (Playwright, local-only) (CI: Node 24, lint + typecheck + unit test on every push)
+Current: **147 unit tests, 14 test files, all passing** + **3 E2E test files** (Playwright, local-only) (CI: Node 24, lint + typecheck + unit test on every push)
 Coverage: statements 82%, functions 90%, lines 85%, branches 75% (threshold: 80/80/80/70)
 
 Test files:
@@ -261,11 +292,11 @@ Test files:
 - `src/lib/auth/__tests__/rbac.test.ts` — RBAC helpers (12 tests)
 - `src/lib/evidence/__tests__/` — validate + storage (15 tests)
 - `src/lib/utils/__tests__/compliance.test.ts` — compliance calculations (13 tests)
-- `src/app/api/license/activate/__tests__/route.test.ts` — PUT change-key (Super Admin gate + upsert) (6 tests)
+- `src/app/api/license/activate/__tests__/route.test.ts` — PUT change-key (6 tests)
 - `src/app/api/tenants/__tests__/route.test.ts` — tenant API (5 tests)
-- `src/app/api/users/__tests__/route.test.ts` — user API (6 tests)
+- `src/app/api/users/__tests__/route.test.ts` — user API: create-new + add-existing + 409 (7 tests)
 - `src/app/api/frameworks/__tests__/route.test.ts` — framework API (5 tests)
-- `src/app/api/assessments/__tests__/route.test.ts` — assessment API (create/patch/delete) + response upsert (19 tests)
+- `src/app/api/assessments/__tests__/route.test.ts` — assessment API + response upsert (19 tests)
 - `src/app/api/evidence/__tests__/route.test.ts` — evidence upload/delete API (8 tests)
 - `prisma/seeds/__tests__/seed-data.test.ts` — framework seed integrity (28 tests)
 

@@ -77,19 +77,31 @@ model User {
   password              String?
   passwordResetToken    String?          @unique
   passwordResetTokenExp DateTime?
-  isSuperAdmin          Boolean          @default(false)  // NEW
-  createdAt             DateTime         @default(now())  // NEW
-  updatedAt             DateTime         @updatedAt       // NEW
+  isSuperAdmin          Boolean          @default(false)
+  mustChangePassword    Boolean          @default(false)  // true on first login / admin reset
+  passwordChangedAt     DateTime?                         // set on every password change; used for expiry check
+  failedLoginAttempts   Int              @default(0)      // incremented on wrong password
+  lockedUntil           DateTime?                         // non-null = account locked until this time
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
   accounts              Account[]
   sessions              Session[]
-  tenantUsers           TenantUser[]     // NEW
-  controlResponses      ControlResponse[] // NEW (lastUpdatedBy)
-  evidences             Evidence[]       // NEW (uploadedBy)
+  tenantUsers           TenantUser[]
+  controlResponses      ControlResponse[]
+  evidences             Evidence[]
 }
 
 // ─────────────────────────────────────────
 // NEW MODELS
 // ─────────────────────────────────────────
+
+// Key-value store for runtime configuration (Security Policy etc.)
+// Avoids env-var restarts for settings that Super Admin may change at runtime.
+model AppSettings {
+  key       String   @id    // e.g. "password_expiry_days", "lockout_attempts", "lockout_minutes"
+  value     String
+  updatedAt DateTime @updatedAt
+}
 
 // System-level license (one record per installation)
 // Validated daily against Supabase REST API

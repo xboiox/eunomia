@@ -79,16 +79,19 @@ app/
     │   ├── new/page.tsx       # Create tenant
     │   └── [tenantId]/page.tsx # Tenant detail + member list
     ├── users/
-    │   └── page.tsx           # User management per tenant (invite, role, remove)
-    ├── assessments/           # Phase 4
+    │   └── page.tsx           # Create user + PasswordRevealModal + reset/unlock
+    ├── assessments/
     │   ├── page.tsx
     │   ├── new/page.tsx
     │   └── [assessmentId]/
     │       ├── page.tsx
+    │       ├── edit/page.tsx  # Edit name/description/deadline (ADMIN)
     │       └── controls/[controlId]/page.tsx
-    ├── frameworks/            # Phase 3
+    ├── frameworks/
     │   └── page.tsx
-    └── settings/              # Phase 7
+    ├── change-password/       # Force-change: first login / expired password
+    │   └── page.tsx
+    └── settings/              # Account + Security Policy (SA) + System Config (SA)
         └── page.tsx
 ```
 
@@ -111,8 +114,14 @@ api/
 │   └── [tenantId]/route.ts    # GET, PATCH (ADMIN+), DELETE (Super Admin)
 │
 ├── users/
-│   ├── route.ts               # GET (tenant-scoped), POST (invite by email, ADMIN+)
-│   └── [userId]/route.ts      # PATCH (role change), DELETE (remove from tenant)
+│   ├── route.ts               # GET (tenant-scoped), POST (smart create-or-add, ADMIN+)
+│   ├── [userId]/
+│   │   ├── route.ts           # PATCH (role change), DELETE (remove from tenant)
+│   │   ├── reset-password/    # POST: admin resets password → temp pwd + mustChangePassword
+│   │   └── unlock/            # POST: admin unlocks locked account early
+│   └── me/password/route.ts   # PATCH: user changes own password; sets passwordChangedAt
+│
+├── admin/settings/security/   # GET/PUT security policy (Super Admin only)
 │
 ├── frameworks/                # Phase 3
 │   └── [frameworkId]/domains/route.ts
@@ -197,18 +206,24 @@ User ─────────── TenantUser ──────────
 **Role hierarchy:**
 ```
 Super Admin  (User.isSuperAdmin = true)
-  → Manage all tenants, all users, view license status
-  → Not necessarily a member of any tenant
+  → Manage all tenants, all users, view/change license key
+  → Configure Security Policy (password expiry, lockout)
+  → Unlock locked accounts across all tenants
 
 Tenant Admin  (TenantUser.role = ADMIN)
-  → Manage users within their tenant
-  → Create/manage assessments
-  → View all evidence in their tenant
+  → Create users (temp password generated, shown once)
+  → Add existing users (single account, multi-tenant)
+  → Reset passwords, unlock accounts within their tenant
+  → Create/edit/delete assessments, change status
 
 Assessor  (TenantUser.role = ASSESSOR)
   → Fill in control responses
-  → Upload/view evidence
-  → Cannot manage users or delete assessments
+  → Upload/view/delete evidence
+  → Cannot manage users or create/delete assessments
+
+All roles:
+  → Change own password (Settings → Account)
+  → First login forces password change (mustChangePassword=true)
 ```
 
 **RBAC helpers** (use these in all API routes):
