@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getAuthSession } from "@/lib/auth/session";
 import { getUserTenants } from "@/lib/auth/rbac";
+import Image from "next/image";
 import { SidebarNav } from "@/components/dashboard/SidebarNav";
 import { SignOutButton } from "@/components/dashboard/SignOutButton";
 import { AdminBanners } from "@/components/dashboard/AdminBanners";
@@ -73,9 +74,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
       {/* Sidebar */}
       <aside className="flex w-60 shrink-0 flex-col border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
         {/* Logo */}
-        <div className="flex h-16 items-center border-b border-gray-200 px-5 dark:border-gray-700">
-          <span className="text-lg font-bold text-gray-900 dark:text-white">Eunomia</span>
-          <span className="ml-2 text-xs text-gray-400">Compliance</span>
+        <div className="flex h-16 items-center gap-2.5 border-b border-gray-200 px-4 dark:border-gray-700">
+          <Image
+            src="/images/logo/logo.png"
+            alt="Eunomia"
+            width={36}
+            height={36}
+            className="shrink-0"
+            priority
+          />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold text-gray-900 dark:text-white">Eunomia</p>
+            <p className="text-xs text-gray-400">Compliance</p>
+          </div>
         </div>
 
         <SidebarNav items={navItems} />

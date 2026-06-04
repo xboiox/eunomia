@@ -55,22 +55,19 @@ const Signin = () => {
               data-wow-delay=".15s"
             >
               <div className="mb-10 text-center">
-                <Link href="/" className="mx-auto inline-block max-w-[160px]">
+                <Link href="/" className="mx-auto inline-block">
                   <Image
-                    src="/images/logo/logo.svg"
-                    alt="logo"
-                    width={140}
-                    height={30}
-                    className="dark:hidden"
-                  />
-                  <Image
-                    src="/images/logo/logo-white.svg"
-                    alt="logo"
-                    width={140}
-                    height={30}
-                    className="hidden dark:block"
+                    src="/images/logo/logo.png"
+                    alt="Eunomia"
+                    width={80}
+                    height={80}
+                    className="mx-auto"
+                    priority
                   />
                 </Link>
+                <p className="mt-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                  Eunomia Compliance
+                </p>
               </div>
 
               <SwitchOption
