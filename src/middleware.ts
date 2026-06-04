@@ -96,9 +96,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/signin", request.url));
   }
 
-  // Force first-login password change before accessing anything else
+  // Force first-login password change before accessing any dashboard page.
+  // API routes are intentionally excluded — the PATCH /api/users/me/password
+  // call must be allowed through so the user can actually complete the change.
   const CHANGE_PASSWORD_PATH = "/dashboard/change-password";
-  if (token.mustChangePassword && pathname !== CHANGE_PASSWORD_PATH) {
+  if (
+    token.mustChangePassword &&
+    pathname !== CHANGE_PASSWORD_PATH &&
+    !pathname.startsWith("/api/")
+  ) {
     return NextResponse.redirect(new URL(CHANGE_PASSWORD_PATH, request.url));
   }
 
