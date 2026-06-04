@@ -61,8 +61,11 @@ const SignUp = () => {
                     priority
                   />
                 </Link>
-                <p className="mt-2 text-sm font-semibold text-gray-700 dark:text-gray-200">
-                  Eunomia Compliance
+                <p className="mt-3 text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                  Eunomia
+                </p>
+                <p className="mt-1 text-xs font-medium tracking-widest text-gray-500 uppercase dark:text-gray-400">
+                  IT Compliance Dashboard
                 </p>
               </div>
 
