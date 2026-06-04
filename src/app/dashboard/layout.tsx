@@ -74,7 +74,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       {/* Sidebar */}
       <aside className="flex w-60 shrink-0 flex-col border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
         {/* Logo */}
-        <div className="flex h-16 items-center gap-2.5 border-b border-gray-200 px-4 dark:border-gray-700">
+        <div className="flex items-center gap-2.5 border-b border-gray-200 px-4 py-3 dark:border-gray-700">
           <Image
             src="/images/logo/logo.png"
             alt="Eunomia"
@@ -84,8 +84,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
             priority
           />
           <div className="min-w-0">
-            <p className="truncate text-sm font-bold tracking-tight text-gray-900 dark:text-white">Eunomia</p>
-            <p className="truncate text-[10px] font-medium uppercase tracking-widest text-gray-400">IT Compliance Dashboard</p>
+            <p className="text-sm font-bold tracking-tight text-gray-900 dark:text-white">Eunomia</p>
+            <p className="text-[10px] font-medium uppercase leading-tight tracking-widest text-gray-400">IT Compliance</p>
+            <p className="text-[10px] font-medium uppercase leading-tight tracking-widest text-gray-400">Dashboard</p>
           </div>
         </div>
 
