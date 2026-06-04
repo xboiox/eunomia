@@ -14,6 +14,8 @@ const PUBLIC_AUTH_PREFIXES = [
   "/signup",
   "/forgot-password",
   "/reset-password",
+  "/privacy",
+  "/policy",
 ];
 
 const SKIP_PREFIXES = [

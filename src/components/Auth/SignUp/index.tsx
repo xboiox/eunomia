@@ -3,7 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import SocialSignIn from "../SocialSignIn";
 import SwitchOption from "../SwitchOption";
 import { useState } from "react";
 import MagicLink from "../MagicLink";
@@ -69,15 +68,6 @@ const SignUp = () => {
                 </p>
               </div>
 
-              <SocialSignIn />
-
-              <span className="z-1 relative my-8 block text-center">
-                <span className="-z-1 absolute left-0 top-1/2 block h-px w-full bg-stroke dark:bg-dark-3"></span>
-                <span className="text-body-secondary relative z-10 inline-block bg-white px-3 text-base dark:bg-dark-2">
-                  OR
-                </span>
-              </span>
-
               <SwitchOption
                 isPassword={isPassword}
                 setIsPassword={setIsPassword}
@@ -127,11 +117,11 @@ const SignUp = () => {
 
               <p className="text-body-secondary mb-4 text-base">
                 By creating an account you are agree with our{" "}
-                <Link href="/#" className="text-primary hover:underline">
+                <Link href="/privacy" className="text-primary hover:underline">
                   Privacy
                 </Link>{" "}
                 and{" "}
-                <Link href="/#" className="text-primary hover:underline">
+                <Link href="/policy" className="text-primary hover:underline">
                   Policy
                 </Link>
               </p>
