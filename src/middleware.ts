@@ -25,6 +25,7 @@ const SKIP_PREFIXES = [
   "/api/license",
   "/api/forgot-password",
   "/api/register",
+  "/api/health",
   "/error",
 ];
 

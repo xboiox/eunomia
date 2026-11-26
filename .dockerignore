@@ -1,0 +1,21 @@
+# Never ship secrets or local state into the image
+.env
+.env*.local
+uploads
+node_modules
+.next
+coverage
+test-results
+playwright-report
+*.tsbuildinfo
+.git
+.github
+.DS_Store
+npm-debug.log*
+
+# Not needed at runtime
+e2e
+docs
+markdown
+img
+*.png
