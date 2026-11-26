@@ -155,6 +155,23 @@ Open **http://localhost:3000**.
 
 ---
 
+## Production Deployment (VPS + Coolify)
+
+The repo ships a production [`Dockerfile`](Dockerfile) that runs migrations and the (idempotent) framework seed on every start, plus a `/api/health` endpoint for health checks.
+
+Step-by-step guide (Bahasa Indonesia): **[docs/DEPLOYMENT_COOLIFY.md](docs/DEPLOYMENT_COOLIFY.md)**
+
+Quick local smoke test of the image:
+
+```bash
+docker build -t eunomia .
+docker run --rm -p 3000:3000 --env-file .env -e DATABASE_URL="postgresql://user:pass@host.docker.internal:5432/eunomia" eunomia
+```
+
+> `--env-file` does not strip quotes — use an unquoted copy of `.env` (`KEY=value`) for this.
+
+---
+
 ## Available Scripts
 
 | Command | Description |

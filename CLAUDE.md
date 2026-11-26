@@ -273,6 +273,10 @@ EMAIL_FROM=
 | `prisma/schema.prisma` | Full schema — all models defined, run `prisma migrate dev --name init` once |
 | `.env.example` | All required env vars with descriptions |
 | `uploads/` | Evidence file storage root (gitignored) |
+| `Dockerfile` | Multi-stage production image (Node 24 slim, non-root `node` user, HEALTHCHECK on `/api/health`) |
+| `docker/entrypoint.sh` | Container start: validate required env → `prisma migrate deploy` → seed (toggle via `RUN_MIGRATIONS` / `RUN_SEED`) → `next start` |
+| `src/app/api/health/route.ts` | Public health probe (`SELECT 1`); 200 ok / 503 — bypassed in middleware |
+| `docs/DEPLOYMENT_COOLIFY.md` | VPS + Coolify deployment guide (Bahasa Indonesia) |
 
 ---
 
@@ -284,7 +288,7 @@ npm run test:run    # single run
 npm run test:coverage  # with coverage report
 ```
 
-Current: **147 unit tests, 14 test files, all passing** + **3 E2E test files** (Playwright, local-only) (CI: Node 24, lint + typecheck + unit test on every push)
+Current: **149 unit tests, 15 test files, all passing** + **3 E2E test files** (Playwright, local-only) (CI: Node 24, lint + typecheck + unit test on every push)
 Coverage: statements 82%, functions 90%, lines 85%, branches 75% (threshold: 80/80/80/70)
 
 Test files:
@@ -298,6 +302,7 @@ Test files:
 - `src/app/api/frameworks/__tests__/route.test.ts` — framework API (5 tests)
 - `src/app/api/assessments/__tests__/route.test.ts` — assessment API + response upsert (19 tests)
 - `src/app/api/evidence/__tests__/route.test.ts` — evidence upload/delete API (8 tests)
+- `src/app/api/health/__tests__/route.test.ts` — health probe 200/503 (2 tests)
 - `prisma/seeds/__tests__/seed-data.test.ts` — framework seed integrity (28 tests)
 
 ---
@@ -348,7 +353,7 @@ update license_keys set expires_at = now() + interval '1 year' where key = 'KEY'
 
 ## First-Run Setup Sequence
 
-> Full step-by-step local install + troubleshooting lives in [README.md](README.md). Summary:
+> Full step-by-step local install + troubleshooting lives in [README.md](README.md). Production deploy (VPS + Coolify): [docs/DEPLOYMENT_COOLIFY.md](docs/DEPLOYMENT_COOLIFY.md). Summary:
 
 1. Create the PostgreSQL role + database (default dev role: `<db-user>`, db `eunomia`)
 2. Set env vars (`cp .env.example .env`, then fill `DATABASE_URL`, `NEXTAUTH_SECRET`, `SUPABASE_*`)
